@@ -43,10 +43,10 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Google Sheets response:', JSON.stringify(data));
     
-    // H3 = Senne's amount, I3 = Bowie's amount
+    // H3 = Bowie's amount, I3 = Senne's amount
     const values = data.values?.[0] || [];
-    const senneRaw = values[0] || '0';
-    const bowieRaw = values[1] || '0';
+    const bowieRaw = values[0] || '0';
+    const senneRaw = values[1] || '0';
     
     // Parse the values - handle both comma and period decimal separators
     const parseAmount = (value: string): number => {
