@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import RevenueDashboard from "@/components/RevenueDashboard";
 
 const fetchRevenueData = async () => {
-  const response = await fetch('/api/get-revenue');
-  if (!response.ok) {
-    throw new Error('Failed to fetch revenue data');
+  const { data, error } = await supabase.functions.invoke('get-revenue');
+  
+  if (error) {
+    throw new Error(error.message);
   }
-  return response.json();
+  
+  return data;
 };
 
 const Index = () => {
