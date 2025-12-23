@@ -48,13 +48,37 @@ serve(async (req) => {
     const bowieRaw = values[0] || '0';
     const senneRaw = values[1] || '0';
     
-    // Parse the values - handle both comma and period decimal separators
+    // Parse the values - handle European format (7.186,20) and other formats
     const parseAmount = (value: string): number => {
       // Remove currency symbols and whitespace
-      const cleaned = value.replace(/[€$£\s]/g, '');
-      // Replace comma with period for parsing
-      const normalized = cleaned.replace(',', '.');
-      return parseFloat(normalized) || 0;
+      let cleaned = value.toString().replace(/[€$£\s]/g, '');
+      
+      // Check if it's European format (comma as decimal, period as thousands)
+      // European: 7.186,20 -> 7186.20
+      // US: 7,186.20 -> 7186.20
+      if (cleaned.includes(',') && cleaned.includes('.')) {
+        // Has both - check which comes last (that's the decimal separator)
+        const lastComma = cleaned.lastIndexOf(',');
+        const lastPeriod = cleaned.lastIndexOf('.');
+        if (lastComma > lastPeriod) {
+          // European format: 7.186,20
+          cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+        } else {
+          // US format: 7,186.20
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      } else if (cleaned.includes(',')) {
+        // Only comma - could be decimal (7,20) or thousands (7,186)
+        // If 2 digits after comma, treat as decimal
+        const parts = cleaned.split(',');
+        if (parts[1] && parts[1].length === 2) {
+          cleaned = cleaned.replace(',', '.');
+        } else {
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      }
+      
+      return parseFloat(cleaned) || 0;
     };
     
     const bowie = parseAmount(bowieRaw);
