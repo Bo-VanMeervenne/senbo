@@ -1,14 +1,26 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useQuery } from "@tanstack/react-query";
+import RevenueDashboard from "@/components/RevenueDashboard";
+
+const fetchRevenueData = async () => {
+  const response = await fetch('/api/get-revenue');
+  if (!response.ok) {
+    throw new Error('Failed to fetch revenue data');
+  }
+  return response.json();
+};
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['revenue'],
+    queryFn: fetchRevenueData,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // If API fails, show placeholder data
+  const revenueData = isError ? undefined : data;
+
+  return <RevenueDashboard data={revenueData} isLoading={isLoading && !isError} />;
 };
 
 export default Index;
