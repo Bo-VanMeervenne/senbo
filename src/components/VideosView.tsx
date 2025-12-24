@@ -245,10 +245,15 @@ const VideosView = ({ month }: VideosViewProps) => {
             </div>
             <div>
               <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Revenue</p>
-              <p className="text-2xl font-medium">
-                <span className="text-primary">$</span>
-                <span className="font-mono text-foreground">
-                  {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
+              <p className="text-2xl font-medium flex items-baseline gap-2">
+                <span>
+                  <span className="text-primary">$</span>
+                  <span className="font-mono text-foreground">
+                    {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
+                  </span>
+                </span>
+                <span className="text-sm text-muted-foreground font-normal">
+                  ({videos?.length || 0} videos)
                 </span>
               </p>
             </div>
