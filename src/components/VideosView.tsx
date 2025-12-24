@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Eye } from "lucide-react";
+import { Search, Coins } from "lucide-react";
 
 interface Video {
   title: string;
@@ -66,13 +66,11 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Stats overlay - premium glass design */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full">
-            <span className="text-white/90 text-xs font-medium tracking-wide">{formatViews(video.views)} views</span>
-          </div>
-          <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
-            <span className="text-black font-mono font-semibold text-xs tracking-tight">{formatRevenue(video.revenue)}</span>
+        {/* Stats overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="flex items-center justify-between text-white">
+            <span className="text-sm opacity-80">{formatViews(video.views)} views</span>
+            <span className="font-mono text-sm font-medium">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
