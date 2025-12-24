@@ -114,7 +114,7 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
       {isLoading ? (
         <div className="h-14 w-48 bg-secondary/50 animate-pulse rounded" />
       ) : (
-        <p className="font-serif text-5xl md:text-6xl text-primary tracking-tight">
+        <p className="font-display text-5xl md:text-6xl text-primary tracking-tight font-semibold">
           {formattedRevenue}
         </p>
       )}

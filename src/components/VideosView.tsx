@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, Eye, DollarSign } from "lucide-react";
 
 interface Video {
   title: string;
@@ -75,7 +75,6 @@ const VideoCard = ({ video }: { video: Video }) => {
             No thumbnail
           </div>
         )}
-        {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
@@ -84,11 +83,11 @@ const VideoCard = ({ video }: { video: Video }) => {
         <p className="text-foreground text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-300">
           {video.title}
         </p>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-4 text-sm">
           <span className="text-muted-foreground">
             {formatViews(video.views)}
           </span>
-          <span className="text-primary font-mono">
+          <span className="text-primary font-mono font-medium">
             {formatRevenue(video.revenue)}
           </span>
         </div>
@@ -145,9 +144,11 @@ const VideosView = () => {
     return result;
   }, [videos, searchQuery, sortBy]);
 
+  // Total revenue = 2x Bowie's earnings (as specified)
   const totalRevenue = useMemo(() => {
     if (!videos) return 0;
-    return videos.reduce((sum, v) => sum + v.revenue, 0);
+    const total = videos.reduce((sum, v) => sum + v.revenue, 0);
+    return total * 2;
   }, [videos]);
 
   return (
@@ -159,13 +160,13 @@ const VideosView = () => {
             <p className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] mb-2">
               Total Revenue
             </p>
-            <p className="font-serif text-4xl text-primary">
+            <p className="font-display text-4xl text-primary font-semibold">
               {formatRevenue(totalRevenue)}
             </p>
           </div>
           
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -174,21 +175,34 @@ const VideosView = () => {
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 pl-10 pr-4 py-2 bg-transparent border border-border rounded text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-44 pl-10 pr-4 py-2.5 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
             
-            {/* Sort */}
+            {/* Sort by Views */}
             <button
-              onClick={() => {
-                const order: SortOption[] = ['none', 'views', 'revenue'];
-                const currentIndex = order.indexOf(sortBy);
-                setSortBy(order[(currentIndex + 1) % order.length]);
-              }}
-              className="flex items-center gap-2 px-4 py-2 text-xs border border-border rounded text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+              onClick={() => setSortBy(sortBy === 'views' ? 'none' : 'views')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 ${
+                sortBy === 'views'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+              }`}
             >
-              <ArrowUpDown className="w-3 h-3" />
-              {sortBy === 'none' ? 'Sort' : sortBy === 'views' ? 'Views' : 'Revenue'}
+              <Eye className="w-4 h-4" />
+              Views
+            </button>
+            
+            {/* Sort by Revenue */}
+            <button
+              onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 ${
+                sortBy === 'revenue'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              Revenue
             </button>
           </div>
         </div>
