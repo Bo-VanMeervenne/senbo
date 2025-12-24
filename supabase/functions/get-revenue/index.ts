@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const SHEET_ID = '1alpI26husBws0nVHpf0_CcR4RS3FrrxhBxPLeuhK_3s';
-const RANGE_DOLLARS = 'Summary (Last Month)!H2:I2';
-const RANGE_EUROS = 'Summary (Last Month)!H3:I3';
+const RANGE_DOLLARS = 'Summary (Last Month)!J2:K2';
+const RANGE_EUROS = 'Summary (Last Month)!J3:K3';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -79,15 +79,15 @@ serve(async (req) => {
       return parseFloat(cleaned) || 0;
     };
     
-    // H2:I2 = dollars (H2 = Bowie, I2 = Senne)
+    // J2:K2 = dollars (J2 = Senne, K2 = Bowie)
     const dollarValues = dataDollars.values?.[0] || [];
-    const bowieDollars = parseAmount(dollarValues[0] || '0');
-    const senneDollars = parseAmount(dollarValues[1] || '0');
+    const senneDollars = parseAmount(dollarValues[0] || '0');
+    const bowieDollars = parseAmount(dollarValues[1] || '0');
     
-    // H3:I3 = euros (H3 = Bowie, I3 = Senne)
+    // J3:K3 = euros (J3 = Senne, K3 = Bowie)
     const euroValues = dataEuros.values?.[0] || [];
-    const bowieEuros = parseAmount(euroValues[0] || '0');
-    const senneEuros = parseAmount(euroValues[1] || '0');
+    const senneEuros = parseAmount(euroValues[0] || '0');
+    const bowieEuros = parseAmount(euroValues[1] || '0');
     
     console.log(`Parsed values - Bowie: $${bowieDollars} / €${bowieEuros}, Senne: $${senneDollars} / €${senneEuros}`);
 
