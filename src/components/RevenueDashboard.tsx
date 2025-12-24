@@ -5,17 +5,24 @@ import bowieImage from "@/assets/bowie.jpg";
 const useCountUp = (
   end: number, 
   duration: number = 2000, 
-  isLoading: boolean = false
+  isLoading: boolean = false,
+  key?: string
 ) => {
   const [count, setCount] = useState(0);
   const startTimeRef = useRef<number | null>(null);
-  const hasAnimated = useRef(false);
+  const lastEndRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isLoading || end === 0 || hasAnimated.current) return;
+    if (isLoading) return;
     
-    hasAnimated.current = true;
-    startTimeRef.current = null;
+    // Reset and re-animate when end value changes
+    if (lastEndRef.current !== end) {
+      lastEndRef.current = end;
+      setCount(0);
+      startTimeRef.current = null;
+    }
+    
+    if (end === 0) return;
 
     const animate = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
@@ -33,7 +40,7 @@ const useCountUp = (
     };
 
     requestAnimationFrame(animate);
-  }, [end, duration, isLoading]);
+  }, [end, duration, isLoading, key]);
 
   return count;
 };
