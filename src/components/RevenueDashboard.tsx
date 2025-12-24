@@ -106,29 +106,22 @@ const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
 
   return (
     <div className="w-full max-w-4xl">
-      <div className="flex justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-primary" />
-          <span className="text-sm text-muted-foreground">Senne</span>
-          <span className="text-sm font-mono text-foreground font-medium">{animatedSenne.toFixed(1)}%</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-foreground font-medium">{animatedBowie.toFixed(1)}%</span>
-          <span className="text-sm text-muted-foreground">Bowie</span>
-          <div className="w-3 h-3 rounded-full bg-muted-foreground" />
-        </div>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-xs text-muted-foreground font-mono">{animatedSenne.toFixed(1)}%</span>
+        <span className="text-xs text-muted-foreground/60 uppercase tracking-widest">split</span>
+        <span className="text-xs text-muted-foreground font-mono">{animatedBowie.toFixed(1)}%</span>
       </div>
       
       {isLoading ? (
-        <div className="h-3 bg-secondary animate-pulse rounded-full" />
+        <div className="h-1.5 bg-secondary animate-pulse rounded-full" />
       ) : (
-        <div className="h-3 bg-secondary rounded-full overflow-hidden flex">
+        <div className="h-1.5 bg-border/30 rounded-full overflow-hidden flex">
           <div 
-            className="h-full bg-primary transition-all duration-1000 ease-out rounded-l-full"
+            className="h-full bg-foreground/40 transition-all duration-1000 ease-out"
             style={{ width: `${animatedSenne}%` }}
           />
           <div 
-            className="h-full bg-muted-foreground transition-all duration-1000 ease-out rounded-r-full"
+            className="h-full bg-foreground/20 transition-all duration-1000 ease-out"
             style={{ width: `${animatedBowie}%` }}
           />
         </div>
