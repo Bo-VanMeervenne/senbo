@@ -23,8 +23,8 @@ serve(async (req) => {
       );
     }
 
-    // Fetch videos from Senne & Bo Videos sheet (columns: A=Title, B=URL, C=Views, F=Revenue)
-    const videosRange = encodeURIComponent("Senne & Bo Videos!A2:F100");
+    // Fetch videos from Senne & Bo Videos (Last Month) sheet (columns: A=Title, B=URL, C=Views, F=Revenue)
+    const videosRange = encodeURIComponent("Senne & Bo Videos (Last Month)!A2:F100");
     const videosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${videosRange}?key=${apiKey}`;
     
     console.log('Fetching videos from Google Sheets...');

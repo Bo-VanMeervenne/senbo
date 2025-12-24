@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const SHEET_ID = '1alpI26husBws0nVHpf0_CcR4RS3FrrxhBxPLeuhK_3s';
-const RANGE_DOLLARS = 'Summary!H2:I2';
-const RANGE_EUROS = 'Summary!H3:I3';
+const RANGE_DOLLARS = 'Summary (Last Month)!H2:I2';
+const RANGE_EUROS = 'Summary (Last Month)!H3:I3';
 
 serve(async (req) => {
   // Handle CORS preflight requests
