@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -9,10 +9,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Brush,
 } from "recharts";
-import { format, parseISO, subDays } from "date-fns";
-import { TrendingUp, Eye, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { format, parseISO, subDays, subMonths, subQuarters, subYears, isAfter } from "date-fns";
+import { TrendingUp, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DailyData {
@@ -21,9 +20,15 @@ interface DailyData {
   views: number;
 }
 
-interface DailyRevenueResponse {
-  data: DailyData[];
-}
+type FilterPreset = '7d' | '30d' | '90d' | '1y' | 'all';
+
+const filterLabels: Record<FilterPreset, string> = {
+  '7d': '7D',
+  '30d': '30D',
+  '90d': '90D',
+  '1y': '1Y',
+  'all': 'All',
+};
 
 const fetchDailyRevenue = async (): Promise<DailyData[]> => {
   const { data, error } = await supabase.functions.invoke('get-daily-revenue');
@@ -32,8 +37,9 @@ const fetchDailyRevenue = async (): Promise<DailyData[]> => {
 };
 
 const DailyRevenueChart = () => {
-  const [brushRange, setBrushRange] = useState<{ startIndex?: number; endIndex?: number }>({});
+  const [filter, setFilter] = useState<FilterPreset>('7d');
   const [showViews, setShowViews] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
   
   const { data: rawData, isLoading, isError } = useQuery({
     queryKey: ['daily-revenue'],
@@ -51,55 +57,68 @@ const DailyRevenueChart = () => {
     }));
   }, [rawData]);
 
-  const visibleData = useMemo(() => {
+  const filteredData = useMemo(() => {
     if (!data.length) return [];
-    const start = brushRange.startIndex ?? 0;
-    const end = brushRange.endIndex ?? data.length - 1;
-    return data.slice(start, end + 1);
-  }, [data, brushRange]);
+    
+    const now = new Date();
+    let cutoffDate: Date;
+    
+    switch (filter) {
+      case '7d':
+        cutoffDate = subDays(now, 7);
+        break;
+      case '30d':
+        cutoffDate = subDays(now, 30);
+        break;
+      case '90d':
+        cutoffDate = subDays(now, 90);
+        break;
+      case '1y':
+        cutoffDate = subYears(now, 1);
+        break;
+      case 'all':
+      default:
+        return data;
+    }
+    
+    return data.filter(d => isAfter(parseISO(d.date), cutoffDate));
+  }, [data, filter]);
+
+  // Scroll to zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const filters: FilterPreset[] = ['7d', '30d', '90d', '1y', 'all'];
+    const currentIndex = filters.indexOf(filter);
+    
+    if (e.deltaY > 0 && currentIndex < filters.length - 1) {
+      // Scroll down = zoom out
+      setFilter(filters[currentIndex + 1]);
+    } else if (e.deltaY < 0 && currentIndex > 0) {
+      // Scroll up = zoom in
+      setFilter(filters[currentIndex - 1]);
+    }
+  }, [filter]);
+
+  useEffect(() => {
+    const chartElement = chartRef.current;
+    if (chartElement) {
+      chartElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => chartElement.removeEventListener('wheel', handleWheel);
+    }
+  }, [handleWheel]);
 
   const stats = useMemo(() => {
-    if (!visibleData.length) return { totalRevenue: 0, totalViews: 0, avgRevenue: 0 };
-    const totalRevenue = visibleData.reduce((sum, d) => sum + d.revenue, 0);
-    const totalViews = visibleData.reduce((sum, d) => sum + d.views, 0);
+    if (!filteredData.length) return { totalRevenue: 0, totalViews: 0, avgRevenue: 0 };
+    const totalRevenue = filteredData.reduce((sum, d) => sum + d.revenue, 0);
+    const totalViews = filteredData.reduce((sum, d) => sum + d.views, 0);
     return {
       totalRevenue,
       totalViews,
-      avgRevenue: totalRevenue / visibleData.length,
+      avgRevenue: totalRevenue / filteredData.length,
     };
-  }, [visibleData]);
+  }, [filteredData]);
 
-  const handleZoomIn = useCallback(() => {
-    if (!data.length) return;
-    const currentStart = brushRange.startIndex ?? 0;
-    const currentEnd = brushRange.endIndex ?? data.length - 1;
-    const range = currentEnd - currentStart;
-    const zoomAmount = Math.floor(range * 0.2);
-    if (range > 7) {
-      setBrushRange({
-        startIndex: currentStart + zoomAmount,
-        endIndex: currentEnd - zoomAmount,
-      });
-    }
-  }, [data.length, brushRange]);
-
-  const handleZoomOut = useCallback(() => {
-    if (!data.length) return;
-    const currentStart = brushRange.startIndex ?? 0;
-    const currentEnd = brushRange.endIndex ?? data.length - 1;
-    const range = currentEnd - currentStart;
-    const zoomAmount = Math.floor(range * 0.3);
-    setBrushRange({
-      startIndex: Math.max(0, currentStart - zoomAmount),
-      endIndex: Math.min(data.length - 1, currentEnd + zoomAmount),
-    });
-  }, [data.length, brushRange]);
-
-  const handleReset = useCallback(() => {
-    setBrushRange({});
-  }, []);
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
       return (
@@ -156,7 +175,7 @@ const DailyRevenueChart = () => {
               Daily Revenue
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {visibleData.length} days selected
+              {filteredData.length} days • scroll to zoom
             </p>
           </div>
           
@@ -171,15 +190,21 @@ const DailyRevenueChart = () => {
               Views
             </Button>
             <div className="h-6 w-px bg-border/50" />
-            <Button variant="ghost" size="sm" onClick={handleZoomIn} className="h-8 w-8 p-0">
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleZoomOut} className="h-8 w-8 p-0">
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleReset} className="h-8 w-8 p-0">
-              <RotateCcw className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
+              {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    filter === key
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {filterLabels[key]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -209,12 +234,12 @@ const DailyRevenueChart = () => {
       </div>
 
       {/* Chart */}
-      <div className="p-6 pt-4">
+      <div className="p-6 pt-4" ref={chartRef}>
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              data={filteredData}
+              margin={{ top: 10, right: showViews ? 50 : 10, left: 0, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -252,13 +277,26 @@ const DailyRevenueChart = () => {
               <Tooltip content={<CustomTooltip />} />
               
               {showViews && (
+                <YAxis
+                  yAxisId="views"
+                  orientation="right"
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  width={45}
+                />
+              )}
+              
+              {showViews && (
                 <Area
                   type="monotone"
                   dataKey="views"
                   stroke="hsl(var(--muted-foreground))"
                   strokeWidth={1}
                   fill="url(#viewsGradient)"
-                  yAxisId={1}
+                  yAxisId="views"
                 />
               )}
               
@@ -276,44 +314,6 @@ const DailyRevenueChart = () => {
                   strokeWidth: 2,
                 }}
               />
-              
-              <Brush
-                dataKey="formattedDate"
-                height={32}
-                stroke="hsl(var(--border))"
-                fill="hsl(var(--secondary))"
-                tickFormatter={() => ''}
-                startIndex={brushRange.startIndex}
-                endIndex={brushRange.endIndex}
-                onChange={(range) => {
-                  if (range.startIndex !== undefined && range.endIndex !== undefined) {
-                    setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
-                  }
-                }}
-              >
-                <AreaChart data={data}>
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </Brush>
-              
-              {showViews && (
-                <YAxis
-                  yAxisId={1}
-                  orientation="right"
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  width={50}
-                />
-              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
