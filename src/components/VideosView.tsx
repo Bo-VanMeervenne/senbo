@@ -19,8 +19,10 @@ interface Video {
   thumbnailUrl: string;
 }
 
-const fetchVideos = async (): Promise<Video[]> => {
-  const { data, error } = await supabase.functions.invoke('get-videos');
+const fetchVideos = async (month: 'last' | 'current'): Promise<Video[]> => {
+  const { data, error } = await supabase.functions.invoke('get-videos', {
+    body: { month }
+  });
   if (error) throw new Error(error.message);
   return data?.videos || [];
 };
@@ -139,7 +141,11 @@ const VideosSkeleton = () => (
 
 type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
 
-const VideosView = () => {
+interface VideosViewProps {
+  month: 'last' | 'current';
+}
+
+const VideosView = ({ month }: VideosViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -147,8 +153,8 @@ const VideosView = () => {
   const [statsOpen, setStatsOpen] = useState(false);
 
   const { data: videos, isLoading, isError } = useQuery({
-    queryKey: ['videos'],
-    queryFn: fetchVideos,
+    queryKey: ['videos', month],
+    queryFn: () => fetchVideos(month),
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
@@ -228,7 +234,7 @@ const VideosView = () => {
   }, [videos]);
 
   return (
-    <div className="min-h-[calc(100vh-96px)] px-6 py-8">
+    <div className="min-h-[calc(100vh-128px)] px-6 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Stats Bar */}
         <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/50">

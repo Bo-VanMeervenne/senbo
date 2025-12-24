@@ -124,6 +124,9 @@ const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
   );
 };
 
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
 interface RevenueData {
   senneDollars: number;
   bowieDollars: number;
@@ -132,25 +135,44 @@ interface RevenueData {
 }
 
 interface RevenueDashboardProps {
-  data?: RevenueData;
-  isLoading?: boolean;
+  month: 'last' | 'current';
 }
 
-const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) => {
-  const senneDollars = data?.senneDollars ?? 0;
-  const bowieDollars = data?.bowieDollars ?? 0;
-  const senneEuros = data?.senneEuros ?? 0;
-  const bowieEuros = data?.bowieEuros ?? 0;
+const fetchRevenueData = async (month: 'last' | 'current'): Promise<RevenueData> => {
+  const { data, error } = await supabase.functions.invoke('get-revenue', {
+    body: { month }
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['revenue', month],
+    queryFn: () => fetchRevenueData(month),
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const revenueData = isError ? undefined : data;
+  const senneDollars = revenueData?.senneDollars ?? 0;
+  const bowieDollars = revenueData?.bowieDollars ?? 0;
+  const senneEuros = revenueData?.senneEuros ?? 0;
+  const bowieEuros = revenueData?.bowieEuros ?? 0;
 
   const totalDollars = senneDollars + bowieDollars;
   const senneShare = totalDollars > 0 ? (senneDollars / totalDollars) * 100 : 50;
   const bowieShare = totalDollars > 0 ? (bowieDollars / totalDollars) * 100 : 50;
 
+  const headerText = month === 'current' 
+    ? 'Revenue from current month (live)' 
+    : 'Revenue from last month, updated on the 20th';
+
   return (
-    <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-[calc(100vh-128px)] flex flex-col items-center justify-center px-6 py-12">
       
       {/* Header */}
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">Revenue from last month, updated on the 20th</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">{headerText}</p>
       
       {/* Share Bar */}
       <ShareBar senneShare={senneShare} bowieShare={bowieShare} isLoading={isLoading} />
