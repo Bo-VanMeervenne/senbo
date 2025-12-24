@@ -105,27 +105,25 @@ const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
   const animatedBowie = useCountUp(bowieShare, 2000, isLoading);
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-xs text-muted-foreground font-mono">{animatedSenne.toFixed(1)}%</span>
-        <span className="text-xs text-muted-foreground/60 uppercase tracking-widest">split</span>
-        <span className="text-xs text-muted-foreground font-mono">{animatedBowie.toFixed(1)}%</span>
-      </div>
+    <div className="w-full max-w-4xl flex items-center gap-4">
+      <span className="text-[10px] text-muted-foreground/70 font-mono w-12 text-right">{animatedSenne.toFixed(1)}%</span>
       
       {isLoading ? (
-        <div className="h-1.5 bg-secondary animate-pulse rounded-full" />
+        <div className="flex-1 h-0.5 bg-border/20 animate-pulse rounded-full" />
       ) : (
-        <div className="h-1.5 bg-border/30 rounded-full overflow-hidden flex">
+        <div className="flex-1 h-0.5 rounded-full overflow-hidden flex">
           <div 
-            className="h-full bg-foreground/40 transition-all duration-1000 ease-out"
+            className="h-full bg-primary/50 transition-all duration-1000 ease-out"
             style={{ width: `${animatedSenne}%` }}
           />
           <div 
-            className="h-full bg-foreground/20 transition-all duration-1000 ease-out"
+            className="h-full bg-primary/20 transition-all duration-1000 ease-out"
             style={{ width: `${animatedBowie}%` }}
           />
         </div>
       )}
+      
+      <span className="text-[10px] text-muted-foreground/70 font-mono w-12">{animatedBowie.toFixed(1)}%</span>
     </div>
   );
 };
