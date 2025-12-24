@@ -1,15 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import VideosView from "@/components/VideosView";
+import PasswordGate from "@/components/PasswordGate";
 
 type Tab = 'revenue' | 'videos';
 type MonthTab = 'last' | 'current';
 
 const Index = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('revenue');
   const [monthTab, setMonthTab] = useState<MonthTab>('current');
+
+  useEffect(() => {
+    const auth = localStorage.getItem("dashboard-auth");
+    if (auth === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  if (!isAuthenticated) {
+    return <PasswordGate onSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
