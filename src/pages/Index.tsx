@@ -30,36 +30,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Tab Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/30">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-8 h-14">
-            <button
-              onClick={() => setActiveTab('revenue')}
-              className={`text-sm font-medium tracking-wide transition-colors relative py-4 ${
-                activeTab === 'revenue' 
-                  ? 'text-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Revenue
-              {activeTab === 'revenue' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`text-sm font-medium tracking-wide transition-colors relative py-4 ${
-                activeTab === 'videos' 
-                  ? 'text-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Senbo Videos
-              {activeTab === 'videos' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex items-center h-14">
+            <div className="flex items-center gap-8">
+              <button
+                onClick={() => setActiveTab('revenue')}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === 'revenue' 
+                    ? 'text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Revenue
+              </button>
+              <button
+                onClick={() => setActiveTab('videos')}
+                className={`text-xs uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === 'videos' 
+                    ? 'text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Videos
+              </button>
+            </div>
           </div>
         </div>
       </nav>

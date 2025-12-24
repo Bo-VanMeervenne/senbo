@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search } from "lucide-react";
+import { Search, ArrowUpDown } from "lucide-react";
 
 interface Video {
   title: string;
@@ -26,7 +26,7 @@ const formatViews = (views: number): string => {
     return (views / 1000000).toFixed(1) + 'M';
   }
   if (views >= 1000) {
-    return (views / 1000).toFixed(1) + 'K';
+    return (views / 1000).toFixed(0) + 'K';
   }
   return views.toString();
 };
@@ -39,7 +39,6 @@ const formatRevenue = (revenue: number): string => {
 };
 
 const VideoCard = ({ video }: { video: Video }) => {
-  // Use maxresdefault for highest quality, with hqdefault as fallback
   const thumbnailUrl = video.videoId 
     ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
     : null;
@@ -60,42 +59,36 @@ const VideoCard = ({ video }: { video: Video }) => {
   return (
     <div 
       onClick={handleClick}
-      className="group cursor-pointer bg-card rounded-lg border border-border/30 overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+      className="group cursor-pointer"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-[9/16] bg-secondary overflow-hidden">
+      <div className="relative aspect-[9/16] rounded-lg overflow-hidden mb-4 bg-secondary">
         {thumbnailUrl ? (
           <img 
             src={thumbnailUrl}
             alt={video.title}
             onError={handleImageError}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
             No thumbnail
           </div>
         )}
-        {/* Play overlay */}
-        <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </div>
-        </div>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
       {/* Info */}
-      <div className="p-4">
-        <h3 className="text-foreground text-sm font-medium line-clamp-2 mb-3 leading-tight">
+      <div className="space-y-2">
+        <p className="text-foreground text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-300">
           {video.title}
-        </h3>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm font-medium">
-            {formatViews(video.views)} views
+        </p>
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-muted-foreground">
+            {formatViews(video.views)}
           </span>
-          <span className="text-primary font-mono font-semibold text-base">
+          <span className="text-primary font-mono">
             {formatRevenue(video.revenue)}
           </span>
         </div>
@@ -105,13 +98,13 @@ const VideoCard = ({ video }: { video: Video }) => {
 };
 
 const VideosSkeleton = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-    {Array.from({ length: 10 }).map((_, i) => (
-      <div key={i} className="bg-card rounded-lg border border-border/30 overflow-hidden">
-        <div className="aspect-[9/16] bg-secondary animate-pulse" />
-        <div className="p-4">
-          <div className="h-4 bg-secondary animate-pulse rounded mb-2" />
-          <div className="h-3 bg-secondary animate-pulse rounded w-2/3" />
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+    {Array.from({ length: 12 }).map((_, i) => (
+      <div key={i}>
+        <div className="aspect-[9/16] bg-secondary/50 animate-pulse rounded-lg mb-4" />
+        <div className="space-y-2">
+          <div className="h-4 bg-secondary/50 animate-pulse rounded w-full" />
+          <div className="h-3 bg-secondary/50 animate-pulse rounded w-2/3" />
         </div>
       </div>
     ))}
@@ -136,7 +129,6 @@ const VideosView = () => {
     
     let result = [...videos];
     
-    // Filter by search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(video => 
@@ -144,7 +136,6 @@ const VideosView = () => {
       );
     }
     
-    // Sort
     if (sortBy === 'views') {
       result.sort((a, b) => b.views - a.views);
     } else if (sortBy === 'revenue') {
@@ -154,69 +145,67 @@ const VideosView = () => {
     return result;
   }, [videos, searchQuery, sortBy]);
 
+  const totalRevenue = useMemo(() => {
+    if (!videos) return 0;
+    return videos.reduce((sum, v) => sum + v.revenue, 0);
+  }, [videos]);
+
   return (
-    <div className="min-h-screen bg-background px-6 py-8">
+    <div className="min-h-[calc(100vh-56px)] px-8 py-12">
       <div className="max-w-7xl mx-auto">
-        {/* Search and Sort Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search videos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border/30 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
-            />
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+          <div>
+            <p className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] mb-2">
+              Total Revenue
+            </p>
+            <p className="font-serif text-4xl text-primary">
+              {formatRevenue(totalRevenue)}
+            </p>
           </div>
           
-          {/* Sort */}
-          <div className="flex gap-2">
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-48 pl-10 pr-4 py-2 bg-transparent border border-border rounded text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+              />
+            </div>
+            
+            {/* Sort */}
             <button
-              onClick={() => setSortBy(sortBy === 'views' ? 'none' : 'views')}
-              className={`px-4 py-2.5 text-xs font-medium rounded-lg border transition-colors ${
-                sortBy === 'views'
-                  ? 'bg-primary/10 border-primary/30 text-primary'
-                  : 'bg-card border-border/30 text-muted-foreground hover:text-foreground hover:border-border/50'
-              }`}
+              onClick={() => {
+                const order: SortOption[] = ['none', 'views', 'revenue'];
+                const currentIndex = order.indexOf(sortBy);
+                setSortBy(order[(currentIndex + 1) % order.length]);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-xs border border-border rounded text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
             >
-              Sort by Views
-            </button>
-            <button
-              onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
-              className={`px-4 py-2.5 text-xs font-medium rounded-lg border transition-colors ${
-                sortBy === 'revenue'
-                  ? 'bg-primary/10 border-primary/30 text-primary'
-                  : 'bg-card border-border/30 text-muted-foreground hover:text-foreground hover:border-border/50'
-              }`}
-            >
-              Sort by Revenue
+              <ArrowUpDown className="w-3 h-3" />
+              {sortBy === 'none' ? 'Sort' : sortBy === 'views' ? 'Views' : 'Revenue'}
             </button>
           </div>
         </div>
 
-        {/* Results count */}
-        {!isLoading && videos && (
-          <p className="text-muted-foreground text-xs mb-4">
-            {filteredAndSortedVideos.length} video{filteredAndSortedVideos.length !== 1 ? 's' : ''}
-            {searchQuery && ` matching "${searchQuery}"`}
-          </p>
-        )}
-
-        {/* Videos Grid */}
+        {/* Grid */}
         {isLoading ? (
           <VideosSkeleton />
         ) : isError || !videos?.length ? (
-          <div className="text-center text-muted-foreground py-20">
+          <div className="text-center text-muted-foreground py-24 text-sm">
             No videos found
           </div>
         ) : filteredAndSortedVideos.length === 0 ? (
-          <div className="text-center text-muted-foreground py-20">
-            No videos match your search
+          <div className="text-center text-muted-foreground py-24 text-sm">
+            No results for "{searchQuery}"
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filteredAndSortedVideos.map((video, index) => (
               <VideoCard key={index} video={video} />
             ))}
