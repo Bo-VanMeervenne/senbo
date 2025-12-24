@@ -23,8 +23,9 @@ serve(async (req) => {
       );
     }
 
-    // Fetch videos from Senne & Bo Videos (Last Month) sheet (columns: A=Title, B=URL, C=Views, F=Revenue)
-    const videosRange = encodeURIComponent("Senne & Bo Videos (Last Month)!A2:F100");
+    // Fetch videos from Senne & Bo Videos (Last Month) sheet 
+    // Columns: A=Title, B=URL, C=Views, F=Revenue, I=Publish Date, J=Minutes Watched, K=Avg Duration, L=Likes, M=Shares, N=Subs Gained, O=Thumbnail
+    const videosRange = encodeURIComponent("Senne & Bo Videos (Last Month)!A2:O100");
     const videosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${videosRange}?key=${apiKey}`;
     
     console.log('Fetching videos from Google Sheets...');
@@ -93,9 +94,16 @@ serve(async (req) => {
         videoId: extractVideoId(row[1] || ''),
         views: parseViews(row[2] || '0'),
         revenue: parseAmount(row[5] || '0'), // Column F (index 5)
+        publishDate: row[8] || '', // Column I (index 8)
+        minutesWatched: parseViews(row[9] || '0'), // Column J (index 9)
+        avgDuration: row[10] || '', // Column K (index 10)
+        likes: parseViews(row[11] || '0'), // Column L (index 11)
+        shares: parseViews(row[12] || '0'), // Column M (index 12)
+        subsGained: parseViews(row[13] || '0'), // Column N (index 13)
+        thumbnailUrl: row[14] || '', // Column O (index 14)
       }));
 
-    console.log(`Parsed ${videos.length} videos`);
+    console.log(`Parsed ${videos.length} videos with extended metadata`);
 
     return new Response(
       JSON.stringify({ videos }),
