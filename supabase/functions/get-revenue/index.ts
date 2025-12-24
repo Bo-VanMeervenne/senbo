@@ -24,8 +24,8 @@ serve(async (req) => {
     }
 
     const sheetName = month === 'current' ? 'Summary (Current Month)' : 'Summary (Last Month)';
-    const rangeDollars = `${sheetName}!J2:K2`;
-    const rangeEuros = `${sheetName}!J3:K3`;
+    const rangeDollars = `${sheetName}!H2:I2`;
+    const rangeEuros = `${sheetName}!J2:K2`;
 
     const apiKey = Deno.env.get('GOOGLE_SHEETS_API_KEY');
     
@@ -90,12 +90,12 @@ serve(async (req) => {
       return parseFloat(cleaned) || 0;
     };
     
-    // J2:K2 = dollars (J2 = Bo, K2 = Senne)
+    // H2:I2 = dollars (H2 = Bo, I2 = Senne)
     const dollarValues = dataDollars.values?.[0] || [];
     const bowieDollars = parseAmount(dollarValues[0] || '0');
     const senneDollars = parseAmount(dollarValues[1] || '0');
     
-    // J3:K3 = euros (J3 = Bo, K3 = Senne)
+    // J2:K2 = euros (J2 = Bo, K2 = Senne)
     const euroValues = dataEuros.values?.[0] || [];
     const bowieEuros = parseAmount(euroValues[0] || '0');
     const senneEuros = parseAmount(euroValues[1] || '0');
