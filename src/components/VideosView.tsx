@@ -39,12 +39,22 @@ const formatRevenue = (revenue: number): string => {
 };
 
 const VideoCard = ({ video }: { video: Video }) => {
+  // Use maxresdefault for highest quality, with hqdefault as fallback
   const thumbnailUrl = video.videoId 
-    ? `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
+    ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+    : null;
+  const fallbackUrl = video.videoId
+    ? `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`
     : null;
 
   const handleClick = () => {
     window.open(video.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (fallbackUrl && e.currentTarget.src !== fallbackUrl) {
+      e.currentTarget.src = fallbackUrl;
+    }
   };
 
   return (
@@ -58,6 +68,7 @@ const VideoCard = ({ video }: { video: Video }) => {
           <img 
             src={thumbnailUrl}
             alt={video.title}
+            onError={handleImageError}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -80,11 +91,11 @@ const VideoCard = ({ video }: { video: Video }) => {
         <h3 className="text-foreground text-sm font-medium line-clamp-2 mb-3 leading-tight">
           {video.title}
         </h3>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-sm font-medium">
             {formatViews(video.views)} views
           </span>
-          <span className="text-primary font-mono font-medium">
+          <span className="text-primary font-mono font-semibold text-base">
             {formatRevenue(video.revenue)}
           </span>
         </div>
