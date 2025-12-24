@@ -69,8 +69,8 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         {/* Stats overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
           <div className="flex items-center justify-between text-white">
-            <span className="text-sm opacity-80">{formatViews(video.views)} views</span>
-            <span className="font-mono text-sm font-medium">{formatRevenue(video.revenue)}</span>
+            <span className="text-sm opacity-70">{formatViews(video.views)} views</span>
+            <span className="font-mono text-sm font-semibold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
