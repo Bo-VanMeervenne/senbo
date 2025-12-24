@@ -84,44 +84,51 @@ const VideoCard = ({
     <div 
       onClick={handleClick}
       className="group cursor-pointer animate-in fade-in slide-in-from-bottom-4"
-      style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
+      style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'backwards' }}
     >
-      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden mb-4 bg-secondary">
+      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden mb-4 bg-secondary/30">
         {thumbnailUrl && (
           <img 
             src={thumbnailUrl}
             alt={video.title}
             onError={handleImageError}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
+        
+        {/* Glow effect on hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/20 to-transparent" />
+        </div>
         
         {/* Date badge */}
         {shortDate && (
-          <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg flex items-center gap-1.5">
-            <Calendar className="w-3 h-3 text-white/70" />
-            <span className="text-white text-[10px] font-medium">{shortDate}</span>
+          <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10">
+            <Calendar className="w-3 h-3 text-white/60" />
+            <span className="text-white/80 text-[10px] font-medium tracking-wide">{shortDate}</span>
           </div>
         )}
 
         {/* Stats button overlay */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="p-2 bg-primary/90 backdrop-blur-sm rounded-lg">
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+          <div className="p-2.5 bg-primary backdrop-blur-md rounded-xl shadow-[0_0_20px_-5px_hsl(var(--primary)/0.8)]">
             <BarChart3 className="w-4 h-4 text-primary-foreground" />
           </div>
         </div>
         
         {/* Stats overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-center justify-between">
-            <span className="text-white/60 text-xs">{formatViews(video.views)} views</span>
-            <span className="font-mono text-lg font-semibold text-emerald-400">{formatRevenue(video.revenue)}</span>
+            <span className="text-white/50 text-xs font-medium">{formatViews(video.views)} views</span>
+            <span className="font-mono text-lg font-semibold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
       
-      <p className="text-foreground/80 text-sm leading-relaxed line-clamp-2 group-hover:text-foreground transition-colors">
+      <p className="text-foreground/60 text-sm leading-relaxed line-clamp-2 group-hover:text-foreground transition-colors duration-300">
         {video.title}
       </p>
     </div>
@@ -237,60 +244,61 @@ const VideosView = ({ month }: VideosViewProps) => {
     <div className="min-h-[calc(100vh-128px)] px-6 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Stats Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/50">
-          <div className="flex items-center gap-10">
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Views</p>
-              <p className="text-2xl font-medium text-foreground">{formatViews(totalViews)}</p>
+        <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/30">
+          <div className="flex items-center gap-12">
+            <div className="group">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Views</p>
+              <p className="text-3xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Revenue</p>
-              <p className="text-2xl font-medium flex items-baseline gap-2">
-                <span>
-                  <span className="text-primary">$</span>
-                  <span className="font-mono text-foreground">
-                    {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
-                  </span>
-                </span>
-                <span className="text-sm text-muted-foreground font-normal">
-                  ({videos?.length || 0} videos)
+            <div className="w-px h-12 bg-border/30" />
+            <div className="group">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
+              <p className="text-3xl font-light tracking-tight">
+                <span className="text-primary">$</span>
+                <span className="font-mono text-foreground">
+                  {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
                 </span>
               </p>
+            </div>
+            <div className="w-px h-12 bg-border/30" />
+            <div className="group">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Videos</p>
+              <p className="text-3xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
             </div>
           </div>
           
           {/* Controls */}
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 placeholder="Search videos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-52 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-52 pl-10 pr-4 py-2.5 bg-transparent border border-border/50 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-card/50 transition-all duration-300"
               />
             </div>
             
             {/* Date filters */}
             <button
               onClick={() => setSortBy(sortBy === 'newest' ? 'oldest' : 'newest')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
                 sortBy === 'newest' || sortBy === 'oldest'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]'
+                  : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
               <Calendar className="w-4 h-4" />
-              {sortBy === 'oldest' ? 'Oldest First' : 'Newest First'}
+              {sortBy === 'oldest' ? 'Oldest' : 'Newest'}
             </button>
             
             <button
               onClick={() => setSortBy(sortBy === 'revenue' ? 'newest' : 'revenue')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
                 sortBy === 'revenue'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]'
+                  : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
               <Coins className="w-4 h-4" />
@@ -300,10 +308,10 @@ const VideosView = ({ month }: VideosViewProps) => {
             {/* Advanced filters toggle */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
                 showAdvanced
-                  ? 'bg-secondary text-foreground border-border'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                  ? 'bg-card text-foreground border-border'
+                  : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -314,72 +322,28 @@ const VideosView = ({ month }: VideosViewProps) => {
 
         {/* Advanced Filters */}
         {showAdvanced && (
-          <div className="flex flex-wrap gap-2 mb-6 -mt-4">
-            <button
-              onClick={() => setSortBy('views')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'views'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Views
-            </button>
-            <button
-              onClick={() => setSortBy('watchTime')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'watchTime'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Clock className="w-3 h-3" />
-              Watch Time
-            </button>
-            <button
-              onClick={() => setSortBy('likes')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'likes'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <ThumbsUp className="w-3 h-3" />
-              Likes
-            </button>
-            <button
-              onClick={() => setSortBy('shares')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'shares'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Share2 className="w-3 h-3" />
-              Shares
-            </button>
-            <button
-              onClick={() => setSortBy('subsGained')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'subsGained'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <UserPlus className="w-3 h-3" />
-              Subs Gained
-            </button>
-            <button
-              onClick={() => setSortBy('duration')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
-                sortBy === 'duration'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Play className="w-3 h-3" />
-              Duration
-            </button>
+          <div className="flex flex-wrap gap-2 mb-6 -mt-4 animate-fade-in">
+            {[
+              { key: 'views', label: 'Views', icon: null },
+              { key: 'watchTime', label: 'Watch Time', icon: Clock },
+              { key: 'likes', label: 'Likes', icon: ThumbsUp },
+              { key: 'shares', label: 'Shares', icon: Share2 },
+              { key: 'subsGained', label: 'Subs', icon: UserPlus },
+              { key: 'duration', label: 'Duration', icon: Play },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setSortBy(key as SortOption)}
+                className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all duration-300 ${
+                  sortBy === key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30'
+                }`}
+              >
+                {Icon && <Icon className="w-3 h-3" />}
+                {label}
+              </button>
+            ))}
           </div>
         )}
 
