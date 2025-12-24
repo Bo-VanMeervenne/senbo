@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const SHEET_ID = '1alpI26husBws0nVHpf0_CcR4RS3FrrxhBxPLeuhK_3s';
-const RANGE = 'Summary!H3:I3';
+const RANGE_DOLLARS = 'Summary!H2:I2';
+const RANGE_EUROS = 'Summary!H3:I3';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -25,28 +26,32 @@ serve(async (req) => {
       );
     }
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${apiKey}`;
+    const urlDollars = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE_DOLLARS}?key=${apiKey}`;
+    const urlEuros = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE_EUROS}?key=${apiKey}`;
     
     console.log('Fetching from Google Sheets...');
     
-    const response = await fetch(url);
+    const [responseDollars, responseEuros] = await Promise.all([
+      fetch(urlDollars),
+      fetch(urlEuros)
+    ]);
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Google Sheets API error:', response.status, errorText);
+    if (!responseDollars.ok || !responseEuros.ok) {
+      const errorText = !responseDollars.ok ? await responseDollars.text() : await responseEuros.text();
+      console.error('Google Sheets API error:', errorText);
       return new Response(
         JSON.stringify({ error: 'Failed to fetch from Google Sheets', details: errorText }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
-    console.log('Google Sheets response:', JSON.stringify(data));
+    const [dataDollars, dataEuros] = await Promise.all([
+      responseDollars.json(),
+      responseEuros.json()
+    ]);
     
-    // H3 = Bowie's amount, I3 = Senne's amount
-    const values = data.values?.[0] || [];
-    const bowieRaw = values[0] || '0';
-    const senneRaw = values[1] || '0';
+    console.log('Google Sheets response dollars:', JSON.stringify(dataDollars));
+    console.log('Google Sheets response euros:', JSON.stringify(dataEuros));
     
     // Parse the values - handle European format (7.186,20) and other formats
     const parseAmount = (value: string): number => {
@@ -54,22 +59,15 @@ serve(async (req) => {
       let cleaned = value.toString().replace(/[€$£\s]/g, '');
       
       // Check if it's European format (comma as decimal, period as thousands)
-      // European: 7.186,20 -> 7186.20
-      // US: 7,186.20 -> 7186.20
       if (cleaned.includes(',') && cleaned.includes('.')) {
-        // Has both - check which comes last (that's the decimal separator)
         const lastComma = cleaned.lastIndexOf(',');
         const lastPeriod = cleaned.lastIndexOf('.');
         if (lastComma > lastPeriod) {
-          // European format: 7.186,20
           cleaned = cleaned.replace(/\./g, '').replace(',', '.');
         } else {
-          // US format: 7,186.20
           cleaned = cleaned.replace(/,/g, '');
         }
       } else if (cleaned.includes(',')) {
-        // Only comma - could be decimal (7,20) or thousands (7,186)
-        // If 2 digits after comma, treat as decimal
         const parts = cleaned.split(',');
         if (parts[1] && parts[1].length === 2) {
           cleaned = cleaned.replace(',', '.');
@@ -81,13 +79,25 @@ serve(async (req) => {
       return parseFloat(cleaned) || 0;
     };
     
-    const bowie = parseAmount(bowieRaw);
-    const senne = parseAmount(senneRaw);
+    // H2:I2 = dollars (H2 = Bowie, I2 = Senne)
+    const dollarValues = dataDollars.values?.[0] || [];
+    const bowieDollars = parseAmount(dollarValues[0] || '0');
+    const senneDollars = parseAmount(dollarValues[1] || '0');
     
-    console.log(`Parsed values - Bowie: ${bowie}, Senne: ${senne}`);
+    // H3:I3 = euros (H3 = Bowie, I3 = Senne)
+    const euroValues = dataEuros.values?.[0] || [];
+    const bowieEuros = parseAmount(euroValues[0] || '0');
+    const senneEuros = parseAmount(euroValues[1] || '0');
+    
+    console.log(`Parsed values - Bowie: $${bowieDollars} / €${bowieEuros}, Senne: $${senneDollars} / €${senneEuros}`);
 
     return new Response(
-      JSON.stringify({ bowie, senne }),
+      JSON.stringify({ 
+        bowieDollars, 
+        senneDollars, 
+        bowieEuros, 
+        senneEuros 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
