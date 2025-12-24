@@ -10,8 +10,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format, parseISO } from "date-fns";
-import { TrendingUp, DollarSign, Eye } from "lucide-react";
+import { format, parseISO, getDay } from "date-fns";
+import { TrendingUp, DollarSign, Eye, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface DailyData {
   date: string;
@@ -93,6 +94,48 @@ const DailyRevenueChart = () => {
       avgRevenue: totalRevenue / filteredData.length,
       avgViews: totalViews / filteredData.length,
     };
+  }, [filteredData]);
+
+  // Weekday performance - group by day of week and average
+  const weekdayStats = useMemo(() => {
+    if (!filteredData.length) return [];
+    
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const grouped: Record<number, { revenue: number[]; views: number[] }> = {};
+    
+    // Initialize all days
+    for (let i = 0; i < 7; i++) {
+      grouped[i] = { revenue: [], views: [] };
+    }
+    
+    // Group data by weekday
+    filteredData.forEach((d) => {
+      const dayOfWeek = getDay(parseISO(d.date));
+      grouped[dayOfWeek].revenue.push(d.revenue);
+      grouped[dayOfWeek].views.push(d.views);
+    });
+    
+    // Calculate averages
+    const result = dayNames.map((name, index) => {
+      const revenues = grouped[index].revenue;
+      const views = grouped[index].views;
+      return {
+        day: name,
+        avgRevenue: revenues.length ? revenues.reduce((a, b) => a + b, 0) / revenues.length : 0,
+        avgViews: views.length ? views.reduce((a, b) => a + b, 0) / views.length : 0,
+        count: revenues.length,
+      };
+    });
+    
+    // Find best day
+    const bestRevenue = Math.max(...result.map(r => r.avgRevenue));
+    const bestViews = Math.max(...result.map(r => r.avgViews));
+    
+    return result.map(r => ({
+      ...r,
+      isBestRevenue: r.avgRevenue === bestRevenue && bestRevenue > 0,
+      isBestViews: r.avgViews === bestViews && bestViews > 0,
+    }));
   }, [filteredData]);
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -295,6 +338,63 @@ const DailyRevenueChart = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Advanced - Weekday Performance */}
+      <Collapsible>
+        <CollapsibleTrigger className="w-full px-6 py-3 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors group">
+          <span>Advanced</span>
+          <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="px-6 pb-5">
+            <p className="text-xs text-muted-foreground mb-3">
+              Avg {metric === 'revenue' ? 'revenue' : 'views'} by day of week
+            </p>
+            <div className="flex gap-1.5">
+              {weekdayStats.map((day) => {
+                const isBest = metric === 'revenue' ? day.isBestRevenue : day.isBestViews;
+                const value = metric === 'revenue' ? day.avgRevenue : day.avgViews;
+                const maxValue = Math.max(...weekdayStats.map(d => metric === 'revenue' ? d.avgRevenue : d.avgViews));
+                const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                
+                return (
+                  <div key={day.day} className="flex-1 flex flex-col items-center gap-1.5">
+                    <div className="w-full h-16 flex items-end justify-center">
+                      <div 
+                        className={`w-full max-w-[24px] rounded-t transition-all ${
+                          isBest 
+                            ? 'bg-primary' 
+                            : 'bg-secondary'
+                        }`}
+                        style={{ height: `${Math.max(heightPercent, 4)}%` }}
+                        title={metric === 'revenue' 
+                          ? `$${value.toFixed(2)} avg` 
+                          : `${Math.round(value).toLocaleString()} avg views`
+                        }
+                      />
+                    </div>
+                    <span className={`text-[10px] font-medium ${isBest ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {day.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {weekdayStats.some(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews) && (
+              <p className="text-[10px] text-muted-foreground mt-3 text-center">
+                Best: <span className="text-primary font-medium">
+                  {weekdayStats.find(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews)?.day}
+                </span>
+                {' · '}
+                {metric === 'revenue' 
+                  ? `$${weekdayStats.find(d => d.isBestRevenue)?.avgRevenue.toFixed(0)} avg`
+                  : `${Math.round(weekdayStats.find(d => d.isBestViews)?.avgViews || 0).toLocaleString()} avg`
+                }
+              </p>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
