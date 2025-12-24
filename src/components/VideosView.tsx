@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins } from "lucide-react";
+import { Search, Coins, Calendar, BarChart3 } from "lucide-react";
+import VideoStatsDialog from "./VideoStatsDialog";
 
 interface Video {
   title: string;
@@ -9,6 +10,13 @@ interface Video {
   videoId: string | null;
   views: number;
   revenue: number;
+  publishDate: string;
+  minutesWatched: number;
+  avgDuration: string;
+  likes: number;
+  shares: number;
+  subsGained: number;
+  thumbnailUrl: string;
 }
 
 const fetchVideos = async (): Promise<Video[]> => {
@@ -31,16 +39,35 @@ const formatRevenue = (revenue: number): string => {
   }).format(revenue);
 };
 
-const VideoCard = ({ video, index }: { video: Video; index: number }) => {
-  const thumbnailUrl = video.videoId 
-    ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
-    : null;
+// Parse date to get just the day part for display
+const formatShortDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  // Format: "20/11/2025, 19:59"
+  const parts = dateStr.split(', ')[0];
+  if (!parts) return '';
+  const [day, month] = parts.split('/');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthName = months[parseInt(month) - 1] || month;
+  return `${day} ${monthName}`;
+};
+
+const VideoCard = ({ 
+  video, 
+  index,
+  onStatsClick 
+}: { 
+  video: Video; 
+  index: number;
+  onStatsClick: (video: Video) => void;
+}) => {
+  const thumbnailUrl = video.thumbnailUrl || 
+    (video.videoId ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg` : null);
   const fallbackUrl = video.videoId
     ? `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`
     : null;
 
   const handleClick = () => {
-    window.open(video.url, '_blank', 'noopener,noreferrer');
+    onStatsClick(video);
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -48,6 +75,8 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
       e.currentTarget.src = fallbackUrl;
     }
   };
+
+  const shortDate = formatShortDate(video.publishDate);
 
   return (
     <div 
@@ -65,6 +94,21 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Date badge */}
+        {shortDate && (
+          <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-white/70" />
+            <span className="text-white text-[10px] font-medium">{shortDate}</span>
+          </div>
+        )}
+
+        {/* Stats button overlay */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="p-2 bg-primary/90 backdrop-blur-sm rounded-lg">
+            <BarChart3 className="w-4 h-4 text-primary-foreground" />
+          </div>
+        </div>
         
         {/* Stats overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
@@ -93,11 +137,13 @@ const VideosSkeleton = () => (
   </div>
 );
 
-type SortOption = 'views' | 'revenue' | 'none';
+type SortOption = 'views' | 'revenue' | 'date' | 'none';
 
 const VideosView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('none');
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   const { data: videos, isLoading, isError } = useQuery({
     queryKey: ['videos'],
@@ -105,6 +151,11 @@ const VideosView = () => {
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
+
+  const handleStatsClick = (video: Video) => {
+    setSelectedVideo(video);
+    setStatsOpen(true);
+  };
 
   const filteredAndSortedVideos = useMemo(() => {
     if (!videos) return [];
@@ -115,8 +166,25 @@ const VideosView = () => {
       result = result.filter(video => video.title.toLowerCase().includes(query));
     }
     
-    if (sortBy === 'views') result.sort((a, b) => b.views - a.views);
-    else if (sortBy === 'revenue') result.sort((a, b) => b.revenue - a.revenue);
+    if (sortBy === 'views') {
+      result.sort((a, b) => b.views - a.views);
+    } else if (sortBy === 'revenue') {
+      result.sort((a, b) => b.revenue - a.revenue);
+    } else if (sortBy === 'date') {
+      // Sort by publish date (newest first)
+      result.sort((a, b) => {
+        if (!a.publishDate) return 1;
+        if (!b.publishDate) return -1;
+        // Parse "20/11/2025, 19:59" format
+        const parseDate = (d: string) => {
+          const [datePart, timePart] = d.split(', ');
+          const [day, month, year] = datePart.split('/');
+          const [hour, min] = (timePart || '00:00').split(':');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
+        };
+        return parseDate(b.publishDate).getTime() - parseDate(a.publishDate).getTime();
+      });
+    }
     
     return result;
   }, [videos, searchQuery, sortBy]);
@@ -167,6 +235,18 @@ const VideosView = () => {
             </div>
             
             <button
+              onClick={() => setSortBy(sortBy === 'date' ? 'none' : 'date')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
+                sortBy === 'date'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              Date
+            </button>
+            
+            <button
               onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
                 sortBy === 'revenue'
@@ -190,11 +270,23 @@ const VideosView = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {filteredAndSortedVideos.map((video, index) => (
-              <VideoCard key={index} video={video} index={index} />
+              <VideoCard 
+                key={index} 
+                video={video} 
+                index={index}
+                onStatsClick={handleStatsClick}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* Stats Dialog */}
+      <VideoStatsDialog 
+        video={selectedVideo}
+        open={statsOpen}
+        onOpenChange={setStatsOpen}
+      />
     </div>
   );
 };
