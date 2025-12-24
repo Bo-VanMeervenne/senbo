@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins } from "lucide-react";
+import { Search, Coins, Eye } from "lucide-react";
 
 interface Video {
   title: string;
@@ -67,10 +67,15 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Stats overlay - always visible */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 via-background/60 to-transparent">
-          <div className="flex flex-col gap-1">
-            <span className="text-foreground font-medium text-lg">{formatViews(video.views)} views</span>
-            <span className="text-primary font-mono font-semibold text-xl">{formatRevenue(video.revenue)}</span>
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-2.5 py-1.5 rounded-lg">
+              <Eye className="w-3.5 h-3.5 text-white/70" />
+              <span className="text-white font-medium text-sm">{formatViews(video.views)}</span>
+            </div>
+            <div className="bg-primary/90 backdrop-blur-sm px-2.5 py-1.5 rounded-lg">
+              <span className="text-primary-foreground font-mono font-semibold text-sm">{formatRevenue(video.revenue)}</span>
+            </div>
           </div>
         </div>
       </div>

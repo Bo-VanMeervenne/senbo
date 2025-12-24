@@ -23,8 +23,8 @@ serve(async (req) => {
       );
     }
 
-    // Fetch videos from Senne & Bo Videos sheet (columns: A=Title, B=URL, C=Views, D=Revenue)
-    const videosRange = encodeURIComponent("Senne & Bo Videos!A2:D100");
+    // Fetch videos from Senne & Bo Videos sheet (columns: A=Title, B=URL, C=Views, F=Revenue)
+    const videosRange = encodeURIComponent("Senne & Bo Videos!A2:F100");
     const videosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${videosRange}?key=${apiKey}`;
     
     console.log('Fetching videos from Google Sheets...');
@@ -92,7 +92,7 @@ serve(async (req) => {
         url: row[1] || '',
         videoId: extractVideoId(row[1] || ''),
         views: parseViews(row[2] || '0'),
-        revenue: parseAmount(row[3] || '0'),
+        revenue: parseAmount(row[5] || '0'), // Column F (index 5)
       }));
 
     console.log(`Parsed ${videos.length} videos`);
