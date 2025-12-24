@@ -3,14 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import VideosView from "@/components/VideosView";
+import GeneralView from "@/components/GeneralView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'revenue' | 'videos';
+type Tab = 'general' | 'revenue' | 'videos';
 type MonthTab = 'last' | 'current';
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('revenue');
+  const [activeTab, setActiveTab] = useState<Tab>('general');
   const [monthTab, setMonthTab] = useState<MonthTab>('current');
 
   useEffect(() => {
@@ -31,6 +32,16 @@ const Index = () => {
         <div className="flex justify-center pt-8">
           <div className="flex items-center gap-1 p-1 bg-card/80 backdrop-blur-xl rounded-full border border-border/50">
             <button
+              onClick={() => setActiveTab('general')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                activeTab === 'general' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              General
+            </button>
+            <button
               onClick={() => setActiveTab('revenue')}
               className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                 activeTab === 'revenue' 
@@ -38,7 +49,7 @@ const Index = () => {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Revenue
+              Revenue Split
             </button>
             <button
               onClick={() => setActiveTab('videos')}
@@ -53,36 +64,40 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Month sub-tabs */}
-        <div className="flex justify-center mt-3">
-          <div className="flex items-center gap-1 p-0.5 bg-secondary/50 backdrop-blur-xl rounded-lg border border-border/30">
-            <button
-              onClick={() => setMonthTab('current')}
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                monthTab === 'current' 
-                  ? 'bg-card text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Current Month
-            </button>
-            <button
-              onClick={() => setMonthTab('last')}
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                monthTab === 'last' 
-                  ? 'bg-card text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Last Month
-            </button>
+        {/* Month sub-tabs - only show for revenue and videos */}
+        {activeTab !== 'general' && (
+          <div className="flex justify-center mt-3">
+            <div className="flex items-center gap-1 p-0.5 bg-secondary/50 backdrop-blur-xl rounded-lg border border-border/30">
+              <button
+                onClick={() => setMonthTab('current')}
+                className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                  monthTab === 'current' 
+                    ? 'bg-card text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Current Month
+              </button>
+              <button
+                onClick={() => setMonthTab('last')}
+                className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                  monthTab === 'last' 
+                    ? 'bg-card text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Last Month
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Content */}
-      <div className="pt-32">
-        {activeTab === 'revenue' ? (
+      <div className={activeTab === 'general' ? 'pt-24' : 'pt-32'}>
+        {activeTab === 'general' ? (
+          <GeneralView />
+        ) : activeTab === 'revenue' ? (
           <RevenueDashboard month={monthTab} />
         ) : (
           <VideosView month={monthTab} />

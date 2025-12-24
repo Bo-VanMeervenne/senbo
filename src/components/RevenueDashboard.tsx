@@ -110,7 +110,6 @@ const ProfileCard = ({ name, image, revenueDollars, revenueEuros, sharePercent, 
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import DailyRevenueChart from "@/components/DailyRevenueChart";
 
 interface RevenueData {
   senneDollars: number;
@@ -177,11 +176,6 @@ const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
           sharePercent={bowieShare}
           isLoading={isLoading}
         />
-      </div>
-
-      {/* Daily Revenue Chart */}
-      <div className="w-full max-w-4xl mt-10">
-        <DailyRevenueChart />
       </div>
     </div>
   );
