@@ -116,7 +116,7 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
     <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
       
       {/* Header */}
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-10">Revenue from last month</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-10">Revenue from last month, updated on the 20th</p>
       
       {/* Cards */}
       <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
