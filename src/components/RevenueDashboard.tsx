@@ -147,15 +147,6 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
 
   return (
     <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
-      {/* Total */}
-      <div className="text-center mb-16">
-        <p className="text-muted-foreground text-xs uppercase tracking-[0.25em] mb-3">
-          Total Revenue · Last Month
-        </p>
-        <p className="font-mono text-5xl md:text-7xl font-medium text-foreground tracking-tight">
-          <span className="text-primary">€</span>{formattedTotal}
-        </p>
-      </div>
       
       {/* Cards */}
       <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
