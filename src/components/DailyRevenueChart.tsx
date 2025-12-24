@@ -46,24 +46,23 @@ type WeekdayStats = {
   isBestViews: boolean;
 };
 
-// Weekday Widget Component
+// Weekday Widget Component - Revenue only
 interface WeekdayWidgetProps {
   weekdayStats: WeekdayStats[];
-  metric: MetricType;
 }
 
-const WeekdayWidget = ({ weekdayStats, metric }: WeekdayWidgetProps) => {
+const WeekdayWidget = ({ weekdayStats }: WeekdayWidgetProps) => {
   if (!weekdayStats.length) return null;
   
-  const maxValue = Math.max(...weekdayStats.map(d => metric === 'revenue' ? d.avgRevenue : d.avgViews));
-  const bestDay = weekdayStats.find(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews);
+  const maxValue = Math.max(...weekdayStats.map(d => d.avgRevenue));
+  const bestDay = weekdayStats.find(d => d.isBestRevenue);
 
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6 mt-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary" />
-          By Day of Week
+          Revenue by Day of Week
         </h3>
         {bestDay && (
           <span className="text-xs text-muted-foreground">
@@ -74,9 +73,7 @@ const WeekdayWidget = ({ weekdayStats, metric }: WeekdayWidgetProps) => {
       
       <div className="flex gap-2">
         {weekdayStats.map((day) => {
-          const isBest = metric === 'revenue' ? day.isBestRevenue : day.isBestViews;
-          const value = metric === 'revenue' ? day.avgRevenue : day.avgViews;
-          const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+          const heightPercent = maxValue > 0 ? (day.avgRevenue / maxValue) * 100 : 0;
           
           return (
             <UITooltip key={day.day}>
@@ -85,14 +82,14 @@ const WeekdayWidget = ({ weekdayStats, metric }: WeekdayWidgetProps) => {
                   <div className="w-full h-20 flex items-end justify-center">
                     <div 
                       className={`w-full max-w-[28px] rounded-t transition-all group-hover:opacity-80 ${
-                        isBest 
+                        day.isBestRevenue 
                           ? 'bg-primary' 
                           : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       style={{ height: `${Math.max(heightPercent, 6)}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-medium ${isBest ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs font-medium ${day.isBestRevenue ? 'text-primary' : 'text-muted-foreground'}`}>
                     {day.day}
                   </span>
                 </div>
@@ -101,10 +98,7 @@ const WeekdayWidget = ({ weekdayStats, metric }: WeekdayWidgetProps) => {
                 <div className="text-center">
                   <p className="font-medium">{day.day}</p>
                   <p className="text-muted-foreground">
-                    {metric === 'revenue' 
-                      ? `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} avg`
-                      : `${Math.round(value).toLocaleString()} avg views`
-                    }
+                    ${day.avgRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} avg
                   </p>
                   <p className="text-xs text-muted-foreground/70">{day.count} days</p>
                 </div>
@@ -424,7 +418,7 @@ const DailyRevenueChart = () => {
       </div>
 
       {/* Weekday Widget - separate card below */}
-      <WeekdayWidget weekdayStats={weekdayStats} metric={metric} />
+      <WeekdayWidget weekdayStats={weekdayStats} />
     </div>
   );
 };
