@@ -2,34 +2,51 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
 
-// Create a professional cash register / money tick sound
+// Energetic cash/coin sound - dopamine hit
 const createMoneySound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   
   const playTick = () => {
-    // Layer 1: Sharp click
+    const now = audioContext.currentTime;
+    
+    // Bright coin ping
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
+    osc1.type = 'sine';
     osc1.connect(gain1);
     gain1.connect(audioContext.destination);
-    osc1.frequency.setValueAtTime(800, audioContext.currentTime);
-    osc1.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.02);
-    gain1.gain.setValueAtTime(0.04, audioContext.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-    osc1.start(audioContext.currentTime);
-    osc1.stop(audioContext.currentTime + 0.03);
+    osc1.frequency.setValueAtTime(1800, now);
+    osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc1.start(now);
+    osc1.stop(now + 0.1);
 
-    // Layer 2: Soft thud for depth
+    // Sparkle overtone
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
+    osc2.type = 'sine';
     osc2.connect(gain2);
     gain2.connect(audioContext.destination);
-    osc2.frequency.setValueAtTime(150, audioContext.currentTime);
-    osc2.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.04);
-    gain2.gain.setValueAtTime(0.03, audioContext.currentTime);
-    gain2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.04);
-    osc2.start(audioContext.currentTime);
-    osc2.stop(audioContext.currentTime + 0.04);
+    osc2.frequency.setValueAtTime(3600, now);
+    osc2.frequency.exponentialRampToValueAtTime(2400, now + 0.05);
+    gain2.gain.setValueAtTime(0.05, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc2.start(now);
+    osc2.stop(now + 0.06);
+
+    // Subtle bass thump
+    const osc3 = audioContext.createOscillator();
+    const gain3 = audioContext.createGain();
+    osc3.type = 'sine';
+    osc3.connect(gain3);
+    gain3.connect(audioContext.destination);
+    osc3.frequency.setValueAtTime(200, now);
+    osc3.frequency.exponentialRampToValueAtTime(60, now + 0.05);
+    gain3.gain.setValueAtTime(0.08, now);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc3.start(now);
+    osc3.stop(now + 0.06);
   };
   
   return { playTick, audioContext };
@@ -84,7 +101,7 @@ const useCountUp = (
       const currentValue = end * easeOut;
       setCount(currentValue);
 
-      const tickInterval = Math.max(end / 25, 100);
+      const tickInterval = Math.max(end / 20, 100);
       if (Math.floor(currentValue / tickInterval) > lastTickRef.current) {
         lastTickRef.current = Math.floor(currentValue / tickInterval);
         onTick?.();
@@ -117,7 +134,6 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
 
   const animatedRevenue = useCountUp(revenue, 2000, isLoading, handleTick);
   
-  // Format with euro sign in front
   const formattedRevenue = '€' + new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -185,26 +201,24 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
   const bowieRevenue = data?.bowie ?? 0;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[800px]">
-        <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] text-center mb-8 font-medium">
-          Revenue Split — Last Month
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <ProfileCard
-            name="Senne Jackson"
-            image={senneImage}
-            revenue={senneRevenue}
-            isLoading={isLoading}
-          />
-          <ProfileCard
-            name="Bowie"
-            image={bowieImage}
-            revenue={bowieRevenue}
-            isLoading={isLoading}
-          />
-        </div>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] text-center mb-10 font-medium">
+        Revenue Split — Last Month
+      </p>
+      
+      <div className="w-full max-w-[800px] grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ProfileCard
+          name="Senne Jackson"
+          image={senneImage}
+          revenue={senneRevenue}
+          isLoading={isLoading}
+        />
+        <ProfileCard
+          name="Bowie"
+          image={bowieImage}
+          revenue={bowieRevenue}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
