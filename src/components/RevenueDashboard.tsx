@@ -105,21 +105,21 @@ const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
   const animatedBowie = useCountUp(bowieShare, 2000, isLoading);
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-4xl flex items-center gap-6">
+      <span className="text-sm text-foreground font-mono font-medium min-w-[48px] text-right">{animatedSenne.toFixed(0)}%</span>
+      
       {isLoading ? (
-        <div className="h-2 bg-border/30 animate-pulse rounded-full" />
+        <div className="flex-1 h-2 bg-border/30 animate-pulse rounded-full" />
       ) : (
-        <div className="relative h-2 bg-border/20 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-border/20 rounded-full overflow-hidden">
           <div 
-            className="absolute left-0 top-0 h-full bg-foreground/60 rounded-full transition-all duration-1000 ease-out"
+            className="h-full bg-foreground/70 rounded-full transition-all duration-1000 ease-out"
             style={{ width: `${animatedSenne}%` }}
           />
-          <div className="absolute inset-0 flex justify-between items-center px-0">
-            <span className="absolute -left-14 text-[10px] text-muted-foreground font-mono">{animatedSenne.toFixed(0)}%</span>
-            <span className="absolute -right-14 text-[10px] text-muted-foreground font-mono">{animatedBowie.toFixed(0)}%</span>
-          </div>
         </div>
       )}
+      
+      <span className="text-sm text-foreground font-mono font-medium min-w-[48px]">{animatedBowie.toFixed(0)}%</span>
     </div>
   );
 };
