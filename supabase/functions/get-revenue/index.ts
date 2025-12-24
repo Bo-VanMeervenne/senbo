@@ -6,8 +6,6 @@ const corsHeaders = {
 };
 
 const SHEET_ID = '1alpI26husBws0nVHpf0_CcR4RS3FrrxhBxPLeuhK_3s';
-const RANGE_DOLLARS = 'Summary (Last Month)!J2:K2';
-const RANGE_EUROS = 'Summary (Last Month)!J3:K3';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -16,6 +14,19 @@ serve(async (req) => {
   }
 
   try {
+    // Get month parameter from request body
+    let month = 'last';
+    try {
+      const body = await req.json();
+      month = body?.month || 'last';
+    } catch {
+      // No body or invalid JSON, use default
+    }
+
+    const sheetName = month === 'current' ? 'Summary (Current Month)' : 'Summary (Last Month)';
+    const rangeDollars = `${sheetName}!J2:K2`;
+    const rangeEuros = `${sheetName}!J3:K3`;
+
     const apiKey = Deno.env.get('GOOGLE_SHEETS_API_KEY');
     
     if (!apiKey) {
@@ -26,8 +37,8 @@ serve(async (req) => {
       );
     }
 
-    const urlDollars = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE_DOLLARS}?key=${apiKey}`;
-    const urlEuros = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE_EUROS}?key=${apiKey}`;
+    const urlDollars = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(rangeDollars)}?key=${apiKey}`;
+    const urlEuros = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(rangeEuros)}?key=${apiKey}`;
     
     console.log('Fetching from Google Sheets...');
     
@@ -79,15 +90,15 @@ serve(async (req) => {
       return parseFloat(cleaned) || 0;
     };
     
-    // J2:K2 = dollars (J2 = Senne, K2 = Bowie)
+    // J2:K2 = dollars (J2 = Bo, K2 = Senne)
     const dollarValues = dataDollars.values?.[0] || [];
-    const senneDollars = parseAmount(dollarValues[0] || '0');
-    const bowieDollars = parseAmount(dollarValues[1] || '0');
+    const bowieDollars = parseAmount(dollarValues[0] || '0');
+    const senneDollars = parseAmount(dollarValues[1] || '0');
     
-    // J3:K3 = euros (J3 = Senne, K3 = Bowie)
+    // J3:K3 = euros (J3 = Bo, K3 = Senne)
     const euroValues = dataEuros.values?.[0] || [];
-    const senneEuros = parseAmount(euroValues[0] || '0');
-    const bowieEuros = parseAmount(euroValues[1] || '0');
+    const bowieEuros = parseAmount(euroValues[0] || '0');
+    const senneEuros = parseAmount(euroValues[1] || '0');
     
     console.log(`Parsed values - Bowie: $${bowieDollars} / €${bowieEuros}, Senne: $${senneDollars} / €${senneEuros}`);
 

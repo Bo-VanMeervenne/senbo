@@ -13,6 +13,15 @@ serve(async (req) => {
   }
 
   try {
+    // Get month parameter from request body
+    let month = 'last';
+    try {
+      const body = await req.json();
+      month = body?.month || 'last';
+    } catch {
+      // No body or invalid JSON, use default
+    }
+
     const apiKey = Deno.env.get('GOOGLE_SHEETS_API_KEY');
     
     if (!apiKey) {
@@ -23,9 +32,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch videos from Senne & Bo Videos (Last Month) sheet 
+    // Fetch videos from the appropriate sheet
     // Columns: A=Title, B=URL, C=Views, F=Revenue, I=Publish Date, J=Minutes Watched, K=Avg Duration, L=Likes, M=Shares, N=Subs Gained, O=Thumbnail
-    const videosRange = encodeURIComponent("Senne & Bo Videos (Last Month)!A2:O100");
+    const sheetName = month === 'current' ? 'Senne & Bo Videos (Current Month)' : 'Senne & Bo Videos (Last Month)';
+    const videosRange = encodeURIComponent(`${sheetName}!A2:O100`);
     const videosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${videosRange}?key=${apiKey}`;
     
     console.log('Fetching videos from Google Sheets...');
