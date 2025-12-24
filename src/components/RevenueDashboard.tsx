@@ -2,70 +2,27 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
 
-// Energetic cash/coin sound - dopamine hit
+// Refined money sound - subtle and elegant
 const createMoneySound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   
   const playTick = () => {
     const now = audioContext.currentTime;
     
-    // Bright coin ping
-    const osc1 = audioContext.createOscillator();
-    const gain1 = audioContext.createGain();
-    osc1.type = 'sine';
-    osc1.connect(gain1);
-    gain1.connect(audioContext.destination);
-    osc1.frequency.setValueAtTime(1800, now);
-    osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
-    gain1.gain.setValueAtTime(0.12, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    osc1.start(now);
-    osc1.stop(now + 0.1);
-
-    // Sparkle overtone
-    const osc2 = audioContext.createOscillator();
-    const gain2 = audioContext.createGain();
-    osc2.type = 'sine';
-    osc2.connect(gain2);
-    gain2.connect(audioContext.destination);
-    osc2.frequency.setValueAtTime(3600, now);
-    osc2.frequency.exponentialRampToValueAtTime(2400, now + 0.05);
-    gain2.gain.setValueAtTime(0.05, now);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc2.start(now);
-    osc2.stop(now + 0.06);
-
-    // Subtle bass thump
-    const osc3 = audioContext.createOscillator();
-    const gain3 = audioContext.createGain();
-    osc3.type = 'sine';
-    osc3.connect(gain3);
-    gain3.connect(audioContext.destination);
-    osc3.frequency.setValueAtTime(200, now);
-    osc3.frequency.exponentialRampToValueAtTime(60, now + 0.05);
-    gain3.gain.setValueAtTime(0.08, now);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc3.start(now);
-    osc3.stop(now + 0.06);
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = 'sine';
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.start(now);
+    osc.stop(now + 0.08);
   };
   
   return { playTick, audioContext };
-};
-
-// Generate random chart points for background
-const generateChartPath = (width: number, height: number) => {
-  const points = 12;
-  const step = width / (points - 1);
-  let path = `M 0 ${height}`;
-  
-  for (let i = 0; i < points; i++) {
-    const x = i * step;
-    const y = height - (Math.random() * 0.6 + 0.2) * height;
-    path += ` L ${x} ${y}`;
-  }
-  
-  path += ` L ${width} ${height} Z`;
-  return path;
 };
 
 interface ProfileCardProps {
@@ -77,7 +34,7 @@ interface ProfileCardProps {
 
 const useCountUp = (
   end: number, 
-  duration: number = 2000, 
+  duration: number = 2400, 
   isLoading: boolean = false,
   onTick?: () => void
 ) => {
@@ -97,11 +54,11 @@ const useCountUp = (
       if (!startTimeRef.current) startTimeRef.current = timestamp;
       const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
       
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const easeOut = 1 - Math.pow(1 - progress, 4);
       const currentValue = end * easeOut;
       setCount(currentValue);
 
-      const tickInterval = Math.max(end / 20, 100);
+      const tickInterval = Math.max(end / 18, 150);
       if (Math.floor(currentValue / tickInterval) > lastTickRef.current) {
         lastTickRef.current = Math.floor(currentValue / tickInterval);
         onTick?.();
@@ -122,8 +79,6 @@ const useCountUp = (
 
 const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
   const audioRef = useRef<{ playTick: () => void; audioContext: AudioContext } | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [chartPath] = useState(() => generateChartPath(320, 200));
   
   const handleTick = useCallback(() => {
     if (!audioRef.current) {
@@ -132,7 +87,7 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
     audioRef.current.playTick();
   }, []);
 
-  const animatedRevenue = useCountUp(revenue, 2000, isLoading, handleTick);
+  const animatedRevenue = useCountUp(revenue, 2400, isLoading, handleTick);
   
   const formattedRevenue = '€' + new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: 2,
@@ -140,45 +95,26 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
   }).format(animatedRevenue);
 
   return (
-    <div 
-      className="relative flex flex-col items-center p-10 bg-card rounded-xl border border-border/30 overflow-hidden transition-all duration-300 hover:border-primary/30"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Chart background on hover */}
-      <svg 
-        className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-        viewBox="0 0 320 200" 
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="hsl(145, 80%, 42%)" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="hsl(145, 80%, 42%)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={chartPath} fill="url(#chartGradient)" />
-        <path 
-          d={chartPath.replace(/ L \d+ 200 Z/, '')} 
-          fill="none" 
-          stroke="hsl(145, 80%, 42%)" 
-          strokeWidth="1.5" 
-          strokeOpacity="0.4"
-        />
-      </svg>
-
-      <div className="relative z-10 w-20 h-20 rounded-full overflow-hidden mb-5 ring-2 ring-primary/30 shadow-lg shadow-primary/20">
+    <div className="flex flex-col items-center">
+      {/* Avatar */}
+      <div className="w-24 h-24 rounded-full overflow-hidden mb-6 ring-1 ring-border">
         <img 
           src={image} 
           alt={name}
-          className="w-full h-full object-cover saturate-125 brightness-110 contrast-105"
+          className="w-full h-full object-cover"
         />
       </div>
-      <h2 className="relative z-10 text-foreground font-medium text-lg tracking-wide mb-3">{name}</h2>
+      
+      {/* Name */}
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.25em] mb-4">
+        {name}
+      </p>
+      
+      {/* Revenue */}
       {isLoading ? (
-        <div className="relative z-10 h-10 w-36 bg-secondary animate-pulse rounded" />
+        <div className="h-14 w-48 bg-secondary/50 animate-pulse rounded" />
       ) : (
-        <p className="relative z-10 text-primary font-mono font-semibold text-3xl tracking-tight">
+        <p className="font-serif text-5xl md:text-6xl text-primary tracking-tight">
           {formattedRevenue}
         </p>
       )}
@@ -201,12 +137,14 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
   const bowieRevenue = data?.bowie ?? 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] text-center mb-10 font-medium">
-        Revenue Split — Last Month
+    <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center px-8 py-16">
+      {/* Header */}
+      <p className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] mb-16">
+        Revenue · Last Month
       </p>
       
-      <div className="w-full max-w-[800px] grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Cards */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
         <ProfileCard
           name="Senne Jackson"
           image={senneImage}

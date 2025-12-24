@@ -2,39 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500;600&family=Inter:wght@300;400;500&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 95%;
+    --background: 0 0% 4%;
+    --foreground: 40 6% 90%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 40 6% 90%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 40 6% 90%;
 
-    --primary: 145 80% 42%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 43 74% 66%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 0 0% 8%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 40 6% 90%;
 
-    --muted: 0 0% 40%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 0 0% 35%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 145 80% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 74% 66%;
+    --accent-foreground: 0 0% 4%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 145 80% 42%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 43 74% 66%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 }
 
@@ -46,11 +46,17 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.01em;
   }
 }
 
 @layer utilities {
+  .font-serif {
+    font-family: 'Instrument Serif', serif;
+  }
+  
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Geist Mono', monospace;
   }
 }
