@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar, BarChart3 } from "lucide-react";
+import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play } from "lucide-react";
 import VideoStatsDialog from "./VideoStatsDialog";
 
 interface Video {
@@ -137,11 +137,12 @@ const VideosSkeleton = () => (
   </div>
 );
 
-type SortOption = 'views' | 'revenue' | 'date' | 'none';
+type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
 
 const VideosView = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('none');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
 
@@ -166,24 +167,50 @@ const VideosView = () => {
       result = result.filter(video => video.title.toLowerCase().includes(query));
     }
     
-    if (sortBy === 'views') {
-      result.sort((a, b) => b.views - a.views);
-    } else if (sortBy === 'revenue') {
-      result.sort((a, b) => b.revenue - a.revenue);
-    } else if (sortBy === 'date') {
-      // Sort by publish date (newest first)
-      result.sort((a, b) => {
-        if (!a.publishDate) return 1;
-        if (!b.publishDate) return -1;
-        // Parse "20/11/2025, 19:59" format
-        const parseDate = (d: string) => {
-          const [datePart, timePart] = d.split(', ');
-          const [day, month, year] = datePart.split('/');
-          const [hour, min] = (timePart || '00:00').split(':');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
-        };
-        return parseDate(b.publishDate).getTime() - parseDate(a.publishDate).getTime();
-      });
+    // Parse date helper
+    const parseDate = (d: string) => {
+      if (!d) return new Date(0);
+      const [datePart, timePart] = d.split(', ');
+      const [day, month, year] = datePart.split('/');
+      const [hour, min] = (timePart || '00:00').split(':');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
+    };
+
+    // Parse duration "MM:SS" to seconds
+    const parseDuration = (d: string) => {
+      if (!d) return 0;
+      const parts = d.split(':');
+      return parseInt(parts[0] || '0') * 60 + parseInt(parts[1] || '0');
+    };
+
+    switch (sortBy) {
+      case 'newest':
+        result.sort((a, b) => parseDate(b.publishDate).getTime() - parseDate(a.publishDate).getTime());
+        break;
+      case 'oldest':
+        result.sort((a, b) => parseDate(a.publishDate).getTime() - parseDate(b.publishDate).getTime());
+        break;
+      case 'views':
+        result.sort((a, b) => b.views - a.views);
+        break;
+      case 'revenue':
+        result.sort((a, b) => b.revenue - a.revenue);
+        break;
+      case 'watchTime':
+        result.sort((a, b) => b.minutesWatched - a.minutesWatched);
+        break;
+      case 'likes':
+        result.sort((a, b) => b.likes - a.likes);
+        break;
+      case 'shares':
+        result.sort((a, b) => b.shares - a.shares);
+        break;
+      case 'subsGained':
+        result.sort((a, b) => b.subsGained - a.subsGained);
+        break;
+      case 'duration':
+        result.sort((a, b) => parseDuration(b.avgDuration) - parseDuration(a.avgDuration));
+        break;
     }
     
     return result;
@@ -234,20 +261,21 @@ const VideosView = () => {
               />
             </div>
             
+            {/* Date filters */}
             <button
-              onClick={() => setSortBy(sortBy === 'date' ? 'none' : 'date')}
+              onClick={() => setSortBy(sortBy === 'newest' ? 'oldest' : 'newest')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
-                sortBy === 'date'
+                sortBy === 'newest' || sortBy === 'oldest'
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
               }`}
             >
               <Calendar className="w-4 h-4" />
-              Date
+              {sortBy === 'oldest' ? 'Oldest First' : 'Newest First'}
             </button>
             
             <button
-              onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
+              onClick={() => setSortBy(sortBy === 'revenue' ? 'newest' : 'revenue')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
                 sortBy === 'revenue'
                   ? 'bg-primary text-primary-foreground border-primary'
@@ -257,8 +285,92 @@ const VideosView = () => {
               <Coins className="w-4 h-4" />
               Revenue
             </button>
+
+            {/* Advanced filters toggle */}
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
+                showAdvanced
+                  ? 'bg-secondary text-foreground border-border'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+              }`}
+            >
+              {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              More
+            </button>
           </div>
         </div>
+
+        {/* Advanced Filters */}
+        {showAdvanced && (
+          <div className="flex flex-wrap gap-2 mb-6 -mt-4">
+            <button
+              onClick={() => setSortBy('views')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'views'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Views
+            </button>
+            <button
+              onClick={() => setSortBy('watchTime')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'watchTime'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Clock className="w-3 h-3" />
+              Watch Time
+            </button>
+            <button
+              onClick={() => setSortBy('likes')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'likes'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <ThumbsUp className="w-3 h-3" />
+              Likes
+            </button>
+            <button
+              onClick={() => setSortBy('shares')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'shares'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Share2 className="w-3 h-3" />
+              Shares
+            </button>
+            <button
+              onClick={() => setSortBy('subsGained')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'subsGained'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <UserPlus className="w-3 h-3" />
+              Subs Gained
+            </button>
+            <button
+              onClick={() => setSortBy('duration')}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all ${
+                sortBy === 'duration'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Play className="w-3 h-3" />
+              Duration
+            </button>
+          </div>
+        )}
 
         {/* Grid */}
         {isLoading ? (

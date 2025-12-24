@@ -138,7 +138,7 @@ const VideoStatsDialog = ({ video, open, onOpenChange }: VideoStatsDialogProps) 
           />
           <StatCard 
             icon={Play} 
-            label="Avg Duration" 
+            label="Duration" 
             value={video.avgDuration || '0:00'}
           />
           <StatCard 
