@@ -61,35 +61,78 @@ const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: P
   }).format(animatedEuros);
 
   return (
-    <div className="group relative">
+    <div className="group relative h-full">
       {/* Glow effect */}
       <div className="absolute -inset-px bg-gradient-to-b from-primary/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
       
       {/* Card */}
-      <div className="relative bg-card border border-border/50 rounded-3xl p-8 md:p-10 transition-all duration-500 group-hover:border-primary/30">
-        <div className="flex items-center gap-5 mb-8">
-          <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-primary/50 transition-all duration-500">
+      <div className="relative bg-card border border-border/50 rounded-3xl p-8 lg:p-12 transition-all duration-500 group-hover:border-primary/30 h-full flex flex-col">
+        <div className="flex items-center gap-5 mb-8 lg:mb-12">
+          <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-primary/50 transition-all duration-500">
             <img src={image} alt={name} className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-foreground font-medium">{name}</p>
-            <p className="text-muted-foreground text-sm">Creator</p>
+            <p className="text-foreground font-medium text-lg lg:text-xl">{name}</p>
+            <p className="text-muted-foreground text-sm lg:text-base">Creator</p>
           </div>
         </div>
         
         {isLoading ? (
-          <div className="h-20 bg-secondary animate-pulse rounded-lg" />
+          <div className="h-24 bg-secondary animate-pulse rounded-lg" />
         ) : (
-          <div>
-            <p className="font-mono text-4xl md:text-5xl font-medium text-foreground tracking-tight">
+          <div className="mt-auto">
+            <p className="font-mono text-4xl lg:text-6xl font-medium text-foreground tracking-tight">
               <span className="text-primary">$</span>{formattedDollars}
             </p>
-            <p className="font-mono text-lg text-muted-foreground mt-2">
+            <p className="font-mono text-lg lg:text-2xl text-muted-foreground mt-3">
               <span className="text-primary/60">€</span>{formattedEuros}
             </p>
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+interface ShareBarProps {
+  senneShare: number;
+  bowieShare: number;
+  isLoading?: boolean;
+}
+
+const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
+  const animatedSenne = useCountUp(senneShare, 2000, isLoading);
+  const animatedBowie = useCountUp(bowieShare, 2000, isLoading);
+
+  return (
+    <div className="w-full max-w-4xl">
+      <div className="flex justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-primary" />
+          <span className="text-sm text-muted-foreground">Senne</span>
+          <span className="text-sm font-mono text-foreground font-medium">{animatedSenne.toFixed(1)}%</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-mono text-foreground font-medium">{animatedBowie.toFixed(1)}%</span>
+          <span className="text-sm text-muted-foreground">Bowie</span>
+          <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+        </div>
+      </div>
+      
+      {isLoading ? (
+        <div className="h-3 bg-secondary animate-pulse rounded-full" />
+      ) : (
+        <div className="h-3 bg-secondary rounded-full overflow-hidden flex">
+          <div 
+            className="h-full bg-primary transition-all duration-1000 ease-out rounded-l-full"
+            style={{ width: `${animatedSenne}%` }}
+          />
+          <div 
+            className="h-full bg-muted-foreground transition-all duration-1000 ease-out rounded-r-full"
+            style={{ width: `${animatedBowie}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -112,14 +155,21 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
   const senneEuros = data?.senneEuros ?? 0;
   const bowieEuros = data?.bowieEuros ?? 0;
 
+  const totalDollars = senneDollars + bowieDollars;
+  const senneShare = totalDollars > 0 ? (senneDollars / totalDollars) * 100 : 50;
+  const bowieShare = totalDollars > 0 ? (bowieDollars / totalDollars) * 100 : 50;
+
   return (
     <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
       
       {/* Header */}
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-10">Revenue from last month, updated on the 20th</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">Revenue from last month, updated on the 20th</p>
+      
+      {/* Share Bar */}
+      <ShareBar senneShare={senneShare} bowieShare={bowieShare} isLoading={isLoading} />
       
       {/* Cards */}
-      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mt-10">
         <ProfileCard
           name="Senne Jackson"
           image={senneImage}
