@@ -71,11 +71,12 @@ const useCountUp = (
 interface ProfileCardProps {
   name: string;
   image: string;
-  revenue: number;
+  revenueDollars: number;
+  revenueEuros: number;
   isLoading?: boolean;
 }
 
-const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
+const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: ProfileCardProps) => {
   const audioRef = useRef<{ playTick: () => void; audioContext: AudioContext } | null>(null);
   
   const handleTick = useCallback(() => {
@@ -85,12 +86,18 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
     audioRef.current.playTick();
   }, []);
 
-  const animatedRevenue = useCountUp(revenue, 2000, isLoading, handleTick);
+  const animatedDollars = useCountUp(revenueDollars, 2000, isLoading, handleTick);
+  const animatedEuros = useCountUp(revenueEuros, 2000, isLoading);
   
-  const formattedRevenue = new Intl.NumberFormat('de-DE', {
+  const formattedDollars = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(animatedRevenue);
+  }).format(animatedDollars);
+
+  const formattedEuros = new Intl.NumberFormat('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(animatedEuros);
 
   return (
     <div className="group relative">
@@ -110,12 +117,15 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
         </div>
         
         {isLoading ? (
-          <div className="h-16 bg-secondary animate-pulse rounded-lg" />
+          <div className="h-20 bg-secondary animate-pulse rounded-lg" />
         ) : (
           <div>
             <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Earnings</p>
             <p className="font-mono text-4xl md:text-5xl font-medium text-foreground tracking-tight">
-              <span className="text-primary">€</span>{formattedRevenue}
+              <span className="text-primary">$</span>{formattedDollars}
+            </p>
+            <p className="font-mono text-lg text-muted-foreground mt-2">
+              <span className="text-primary/60">€</span>{formattedEuros}
             </p>
           </div>
         )}
@@ -125,8 +135,10 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
 };
 
 interface RevenueData {
-  senne: number;
-  bowie: number;
+  senneDollars: number;
+  bowieDollars: number;
+  senneEuros: number;
+  bowieEuros: number;
 }
 
 interface RevenueDashboardProps {
@@ -135,15 +147,10 @@ interface RevenueDashboardProps {
 }
 
 const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) => {
-  const senneRevenue = data?.senne ?? 0;
-  const bowieRevenue = data?.bowie ?? 0;
-  // Total = Bowie * 2 as specified
-  const totalRevenue = bowieRevenue * 2;
-
-  const formattedTotal = new Intl.NumberFormat('de-DE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(totalRevenue);
+  const senneDollars = data?.senneDollars ?? 0;
+  const bowieDollars = data?.bowieDollars ?? 0;
+  const senneEuros = data?.senneEuros ?? 0;
+  const bowieEuros = data?.bowieEuros ?? 0;
 
   return (
     <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
@@ -153,13 +160,15 @@ const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) =>
         <ProfileCard
           name="Senne Jackson"
           image={senneImage}
-          revenue={senneRevenue}
+          revenueDollars={senneDollars}
+          revenueEuros={senneEuros}
           isLoading={isLoading}
         />
         <ProfileCard
           name="Bowie"
           image={bowieImage}
-          revenue={bowieRevenue}
+          revenueDollars={bowieDollars}
+          revenueEuros={bowieEuros}
           isLoading={isLoading}
         />
       </div>
