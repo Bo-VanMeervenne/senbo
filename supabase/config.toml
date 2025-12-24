@@ -1,1 +1,7 @@
 project_id = "qxtnpwmdspwidrtiqimv"
+
+[functions.get-revenue]
+verify_jwt = false
+
+[functions.get-videos]
+verify_jwt = false
