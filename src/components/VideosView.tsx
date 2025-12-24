@@ -67,10 +67,10 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Stats overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="flex items-center justify-between text-white">
-            <span className="text-sm opacity-70">{formatViews(video.views)} views</span>
-            <span className="font-mono text-sm font-semibold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{formatRevenue(video.revenue)}</span>
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+          <div className="flex items-center justify-between">
+            <span className="text-white/60 text-xs">{formatViews(video.views)} views</span>
+            <span className="font-mono text-lg font-semibold text-emerald-400">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
