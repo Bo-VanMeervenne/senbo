@@ -1,45 +1,21 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
-
-const createMoneySound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  
-  const playTick = () => {
-    const now = audioContext.currentTime;
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.type = 'sine';
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    osc.frequency.setValueAtTime(1200, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc.start(now);
-    osc.stop(now + 0.06);
-  };
-  
-  return { playTick, audioContext };
-};
 
 const useCountUp = (
   end: number, 
   duration: number = 2000, 
-  isLoading: boolean = false,
-  onTick?: () => void
+  isLoading: boolean = false
 ) => {
   const [count, setCount] = useState(0);
   const startTimeRef = useRef<number | null>(null);
   const hasAnimated = useRef(false);
-  const lastTickRef = useRef(0);
 
   useEffect(() => {
     if (isLoading || end === 0 || hasAnimated.current) return;
     
     hasAnimated.current = true;
     startTimeRef.current = null;
-    lastTickRef.current = 0;
 
     const animate = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
@@ -49,12 +25,6 @@ const useCountUp = (
       const currentValue = end * easeOut;
       setCount(currentValue);
 
-      const tickInterval = Math.max(end / 15, 200);
-      if (Math.floor(currentValue / tickInterval) > lastTickRef.current) {
-        lastTickRef.current = Math.floor(currentValue / tickInterval);
-        onTick?.();
-      }
-
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
@@ -63,7 +33,7 @@ const useCountUp = (
     };
 
     requestAnimationFrame(animate);
-  }, [end, duration, isLoading, onTick]);
+  }, [end, duration, isLoading]);
 
   return count;
 };
@@ -77,16 +47,7 @@ interface ProfileCardProps {
 }
 
 const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: ProfileCardProps) => {
-  const audioRef = useRef<{ playTick: () => void; audioContext: AudioContext } | null>(null);
-  
-  const handleTick = useCallback(() => {
-    if (!audioRef.current) {
-      audioRef.current = createMoneySound();
-    }
-    audioRef.current.playTick();
-  }, []);
-
-  const animatedDollars = useCountUp(revenueDollars, 2000, isLoading, handleTick);
+  const animatedDollars = useCountUp(revenueDollars, 2000, isLoading);
   const animatedEuros = useCountUp(revenueEuros, 2000, isLoading);
   
   const formattedDollars = new Intl.NumberFormat('en-US', {
@@ -120,7 +81,7 @@ const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: P
           <div className="h-20 bg-secondary animate-pulse rounded-lg" />
         ) : (
           <div>
-            <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Earnings</p>
+            <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Revenue from last month</p>
             <p className="font-mono text-4xl md:text-5xl font-medium text-foreground tracking-tight">
               <span className="text-primary">$</span>{formattedDollars}
             </p>

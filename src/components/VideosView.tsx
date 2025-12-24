@@ -66,14 +66,13 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Stats overlay - always visible */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-white/70 text-sm">{formatViews(video.views)}</span>
-            </div>
-            <span className="text-white font-mono font-medium text-base tracking-tight">{formatRevenue(video.revenue)}</span>
+        {/* Stats overlay - premium glass design */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full">
+            <span className="text-white/90 text-xs font-medium tracking-wide">{formatViews(video.views)} views</span>
+          </div>
+          <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
+            <span className="text-black font-mono font-semibold text-xs tracking-tight">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
