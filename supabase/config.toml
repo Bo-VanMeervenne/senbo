@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.get-videos]
 verify_jwt = false
+
+[functions.get-daily-revenue]
+verify_jwt = false
