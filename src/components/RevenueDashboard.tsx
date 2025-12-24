@@ -109,11 +109,11 @@ const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
       <span className="text-sm text-foreground font-mono font-medium min-w-[48px] text-right">{animatedSenne.toFixed(0)}%</span>
       
       {isLoading ? (
-        <div className="flex-1 h-2 bg-border/30 animate-pulse rounded-full" />
+        <div className="flex-1 h-2 bg-primary/10 animate-pulse rounded-full" />
       ) : (
-        <div className="flex-1 h-2 bg-border/20 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden backdrop-blur-sm">
           <div 
-            className="h-full bg-foreground/70 rounded-full transition-all duration-1000 ease-out"
+            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(var(--primary),0.3)]"
             style={{ width: `${animatedSenne}%` }}
           />
         </div>
