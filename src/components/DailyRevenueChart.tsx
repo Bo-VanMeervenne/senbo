@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,9 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format, parseISO, subDays, subMonths, subQuarters, subYears, isAfter } from "date-fns";
-import { TrendingUp, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { format, parseISO } from "date-fns";
+import { TrendingUp, DollarSign, Eye } from "lucide-react";
 
 interface DailyData {
   date: string;
@@ -21,6 +20,7 @@ interface DailyData {
 }
 
 type FilterPreset = '7d' | '30d' | '90d' | '1y' | 'all';
+type MetricType = 'revenue' | 'views';
 
 const filterLabels: Record<FilterPreset, string> = {
   '7d': '7D',
@@ -38,8 +38,7 @@ const fetchDailyRevenue = async (): Promise<DailyData[]> => {
 
 const DailyRevenueChart = () => {
   const [filter, setFilter] = useState<FilterPreset>('7d');
-  const [showViews, setShowViews] = useState(false);
-  const chartRef = useRef<HTMLDivElement>(null);
+  const [metric, setMetric] = useState<MetricType>('revenue');
   
   const { data: rawData, isLoading, isError } = useQuery({
     queryKey: ['daily-revenue'],
@@ -57,64 +56,42 @@ const DailyRevenueChart = () => {
     }));
   }, [rawData]);
 
+  // Filter based on number of data points, not calendar days
   const filteredData = useMemo(() => {
     if (!data.length) return [];
     
-    const now = new Date();
-    let cutoffDate: Date;
-    
+    let count: number;
     switch (filter) {
       case '7d':
-        cutoffDate = subDays(now, 7);
+        count = 7;
         break;
       case '30d':
-        cutoffDate = subDays(now, 30);
+        count = 30;
         break;
       case '90d':
-        cutoffDate = subDays(now, 90);
+        count = 90;
         break;
       case '1y':
-        cutoffDate = subYears(now, 1);
+        count = 365;
         break;
       case 'all':
       default:
         return data;
     }
     
-    return data.filter(d => isAfter(parseISO(d.date), cutoffDate));
+    // Take the last N entries from the sorted data
+    return data.slice(-count);
   }, [data, filter]);
 
-  // Scroll to zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const filters: FilterPreset[] = ['7d', '30d', '90d', '1y', 'all'];
-    const currentIndex = filters.indexOf(filter);
-    
-    if (e.deltaY > 0 && currentIndex < filters.length - 1) {
-      // Scroll down = zoom out
-      setFilter(filters[currentIndex + 1]);
-    } else if (e.deltaY < 0 && currentIndex > 0) {
-      // Scroll up = zoom in
-      setFilter(filters[currentIndex - 1]);
-    }
-  }, [filter]);
-
-  useEffect(() => {
-    const chartElement = chartRef.current;
-    if (chartElement) {
-      chartElement.addEventListener('wheel', handleWheel, { passive: false });
-      return () => chartElement.removeEventListener('wheel', handleWheel);
-    }
-  }, [handleWheel]);
-
   const stats = useMemo(() => {
-    if (!filteredData.length) return { totalRevenue: 0, totalViews: 0, avgRevenue: 0 };
+    if (!filteredData.length) return { totalRevenue: 0, totalViews: 0, avgRevenue: 0, avgViews: 0 };
     const totalRevenue = filteredData.reduce((sum, d) => sum + d.revenue, 0);
     const totalViews = filteredData.reduce((sum, d) => sum + d.views, 0);
     return {
       totalRevenue,
       totalViews,
       avgRevenue: totalRevenue / filteredData.length,
+      avgViews: totalViews / filteredData.length,
     };
   }, [filteredData]);
 
@@ -124,17 +101,16 @@ const DailyRevenueChart = () => {
       return (
         <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl p-4 shadow-2xl">
           <p className="text-sm text-muted-foreground mb-2">{dataPoint.fullDate}</p>
-          <div className="space-y-1">
-            <p className="font-mono text-lg font-medium text-foreground">
-              <span className="text-primary">$</span>
-              {dataPoint.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            {showViews && (
-              <p className="font-mono text-sm text-muted-foreground">
-                {dataPoint.views.toLocaleString()} views
-              </p>
+          <p className="font-mono text-lg font-medium text-foreground">
+            {metric === 'revenue' ? (
+              <>
+                <span className="text-primary">$</span>
+                {dataPoint.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </>
+            ) : (
+              <>{dataPoint.views.toLocaleString()} views</>
             )}
-          </div>
+          </p>
         </div>
       );
     }
@@ -172,24 +148,43 @@ const DailyRevenueChart = () => {
           <div>
             <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              Daily Revenue
+              Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {filteredData.length} days • scroll to zoom
+              {filteredData.length} days
             </p>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowViews(!showViews)}
-              className={`h-8 px-3 text-xs transition-all ${showViews ? 'bg-primary/10 border-primary/30' : ''}`}
-            >
-              <Eye className="w-3.5 h-3.5 mr-1.5" />
-              Views
-            </Button>
+            {/* Metric toggle */}
+            <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
+              <button
+                onClick={() => setMetric('revenue')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                  metric === 'revenue'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <DollarSign className="w-3 h-3" />
+                Revenue
+              </button>
+              <button
+                onClick={() => setMetric('views')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                  metric === 'views'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Eye className="w-3 h-3" />
+                Views
+              </button>
+            </div>
+            
             <div className="h-6 w-px bg-border/50" />
+            
+            {/* Time filter */}
             <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
               {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
                 <button
@@ -209,37 +204,43 @@ const DailyRevenueChart = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="bg-secondary/30 rounded-lg p-3">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
             <p className="font-mono text-xl font-medium text-foreground mt-1">
-              <span className="text-primary">$</span>
-              {stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              {metric === 'revenue' ? (
+                <>
+                  <span className="text-primary">$</span>
+                  {stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </>
+              ) : (
+                stats.totalViews.toLocaleString()
+              )}
             </p>
           </div>
           <div className="bg-secondary/30 rounded-lg p-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Average</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Daily Avg</p>
             <p className="font-mono text-xl font-medium text-foreground mt-1">
-              <span className="text-primary">$</span>
-              {stats.avgRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </p>
-          </div>
-          <div className="bg-secondary/30 rounded-lg p-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Views</p>
-            <p className="font-mono text-xl font-medium text-foreground mt-1">
-              {stats.totalViews.toLocaleString()}
+              {metric === 'revenue' ? (
+                <>
+                  <span className="text-primary">$</span>
+                  {stats.avgRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </>
+              ) : (
+                Math.round(stats.avgViews).toLocaleString()
+              )}
             </p>
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="p-6 pt-4" ref={chartRef}>
+      <div className="p-6 pt-4">
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={filteredData}
-              margin={{ top: 10, right: showViews ? 50 : 10, left: 0, bottom: 0 }}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -247,8 +248,8 @@ const DailyRevenueChart = () => {
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid 
@@ -271,41 +272,17 @@ const DailyRevenueChart = () => {
                 tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => metric === 'revenue' ? `$${value}` : `${(value / 1000).toFixed(0)}k`}
                 width={60}
               />
               <Tooltip content={<CustomTooltip />} />
               
-              {showViews && (
-                <YAxis
-                  yAxisId="views"
-                  orientation="right"
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  width={45}
-                />
-              )}
-              
-              {showViews && (
-                <Area
-                  type="monotone"
-                  dataKey="views"
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeWidth={1}
-                  fill="url(#viewsGradient)"
-                  yAxisId="views"
-                />
-              )}
-              
               <Area
                 type="monotone"
-                dataKey="revenue"
+                dataKey={metric}
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                fill="url(#revenueGradient)"
+                fill={metric === 'revenue' ? 'url(#revenueGradient)' : 'url(#viewsGradient)'}
                 dot={false}
                 activeDot={{
                   r: 6,
