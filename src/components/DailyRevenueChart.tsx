@@ -11,8 +11,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO, getDay } from "date-fns";
-import { TrendingUp, DollarSign, Eye, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { TrendingUp, DollarSign, Eye, Calendar } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DailyData {
   date: string;
@@ -35,6 +35,86 @@ const fetchDailyRevenue = async (): Promise<DailyData[]> => {
   const { data, error } = await supabase.functions.invoke('get-daily-revenue');
   if (error) throw new Error(error.message);
   return data?.data || [];
+};
+
+type WeekdayStats = {
+  day: string;
+  avgRevenue: number;
+  avgViews: number;
+  count: number;
+  isBestRevenue: boolean;
+  isBestViews: boolean;
+};
+
+// Weekday Widget Component
+interface WeekdayWidgetProps {
+  weekdayStats: WeekdayStats[];
+  metric: MetricType;
+}
+
+const WeekdayWidget = ({ weekdayStats, metric }: WeekdayWidgetProps) => {
+  if (!weekdayStats.length) return null;
+  
+  const maxValue = Math.max(...weekdayStats.map(d => metric === 'revenue' ? d.avgRevenue : d.avgViews));
+  const bestDay = weekdayStats.find(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews);
+
+  return (
+    <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6 mt-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-primary" />
+          By Day of Week
+        </h3>
+        {bestDay && (
+          <span className="text-xs text-muted-foreground">
+            Best: <span className="text-primary font-medium">{bestDay.day}</span>
+          </span>
+        )}
+      </div>
+      
+      <div className="flex gap-2">
+        {weekdayStats.map((day) => {
+          const isBest = metric === 'revenue' ? day.isBestRevenue : day.isBestViews;
+          const value = metric === 'revenue' ? day.avgRevenue : day.avgViews;
+          const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+          
+          return (
+            <UITooltip key={day.day}>
+              <TooltipTrigger asChild>
+                <div className="flex-1 flex flex-col items-center gap-2 cursor-pointer group">
+                  <div className="w-full h-20 flex items-end justify-center">
+                    <div 
+                      className={`w-full max-w-[28px] rounded-t transition-all group-hover:opacity-80 ${
+                        isBest 
+                          ? 'bg-primary' 
+                          : 'bg-secondary hover:bg-secondary/80'
+                      }`}
+                      style={{ height: `${Math.max(heightPercent, 6)}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${isBest ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {day.day}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-center">
+                  <p className="font-medium">{day.day}</p>
+                  <p className="text-muted-foreground">
+                    {metric === 'revenue' 
+                      ? `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} avg`
+                      : `${Math.round(value).toLocaleString()} avg views`
+                    }
+                  </p>
+                  <p className="text-xs text-muted-foreground/70">{day.count} days</p>
+                </div>
+              </TooltipContent>
+            </UITooltip>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 const DailyRevenueChart = () => {
@@ -96,11 +176,13 @@ const DailyRevenueChart = () => {
     };
   }, [filteredData]);
 
-  // Weekday performance - group by day of week and average
-  const weekdayStats = useMemo(() => {
+  // Weekday performance - group by day of week and average (week ends on Sunday)
+  const weekdayStats = useMemo((): WeekdayStats[] => {
     if (!filteredData.length) return [];
     
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Monday = 0, Sunday = 6 (week ends on Sunday)
+    const dayOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const grouped: Record<number, { revenue: number[]; views: number[] }> = {};
     
     // Initialize all days
@@ -115,12 +197,12 @@ const DailyRevenueChart = () => {
       grouped[dayOfWeek].views.push(d.views);
     });
     
-    // Calculate averages
-    const result = dayNames.map((name, index) => {
-      const revenues = grouped[index].revenue;
-      const views = grouped[index].views;
+    // Calculate averages in correct order (Mon-Sun)
+    const result = dayOrder.map((dayIndex, i) => {
+      const revenues = grouped[dayIndex].revenue;
+      const views = grouped[dayIndex].views;
       return {
-        day: name,
+        day: dayNames[i],
         avgRevenue: revenues.length ? revenues.reduce((a, b) => a + b, 0) / revenues.length : 0,
         avgViews: views.length ? views.reduce((a, b) => a + b, 0) / views.length : 0,
         count: revenues.length,
@@ -184,217 +266,165 @@ const DailyRevenueChart = () => {
   }
 
   return (
-    <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl overflow-hidden">
-      {/* Header */}
-      <div className="p-6 border-b border-border/20">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {filteredData.length} days
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Metric toggle */}
-            <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
-              <button
-                onClick={() => setMetric('revenue')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
-                  metric === 'revenue'
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <DollarSign className="w-3 h-3" />
-                Revenue
-              </button>
-              <button
-                onClick={() => setMetric('views')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
-                  metric === 'views'
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Eye className="w-3 h-3" />
-                Views
-              </button>
+    <div className="space-y-4">
+      <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-border/20">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {filteredData.length} days
+              </p>
             </div>
             
-            <div className="h-6 w-px bg-border/50" />
-            
-            {/* Time filter */}
-            <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
-              {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
+            <div className="flex items-center gap-2">
+              {/* Metric toggle */}
+              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
                 <button
-                  key={key}
-                  onClick={() => setFilter(key)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filter === key
+                  onClick={() => setMetric('revenue')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                    metric === 'revenue'
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {filterLabels[key]}
+                  <DollarSign className="w-3 h-3" />
+                  Revenue
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="bg-secondary/30 rounded-lg p-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
-            <p className="font-mono text-xl font-medium text-foreground mt-1">
-              {metric === 'revenue' ? (
-                <>
-                  <span className="text-primary">$</span>
-                  {stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                </>
-              ) : (
-                stats.totalViews.toLocaleString()
-              )}
-            </p>
-          </div>
-          <div className="bg-secondary/30 rounded-lg p-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Daily Avg</p>
-            <p className="font-mono text-xl font-medium text-foreground mt-1">
-              {metric === 'revenue' ? (
-                <>
-                  <span className="text-primary">$</span>
-                  {stats.avgRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                </>
-              ) : (
-                Math.round(stats.avgViews).toLocaleString()
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="p-6 pt-4">
-        <div className="h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={filteredData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="hsl(var(--border))" 
-                opacity={0.3}
-                vertical={false}
-              />
-              <XAxis
-                dataKey="formattedDate"
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={false}
-                axisLine={false}
-                interval="preserveStartEnd"
-                minTickGap={40}
-              />
-              <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => metric === 'revenue' ? `$${value}` : `${(value / 1000).toFixed(0)}k`}
-                width={60}
-              />
-              <Tooltip content={<CustomTooltip />} />
+                <button
+                  onClick={() => setMetric('views')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                    metric === 'views'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  Views
+                </button>
+              </div>
               
-              <Area
-                type="monotone"
-                dataKey={metric}
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fill={metric === 'revenue' ? 'url(#revenueGradient)' : 'url(#viewsGradient)'}
-                dot={false}
-                activeDot={{
-                  r: 6,
-                  fill: 'hsl(var(--primary))',
-                  stroke: 'hsl(var(--background))',
-                  strokeWidth: 2,
-                }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+              <div className="h-6 w-px bg-border/50" />
+              
+              {/* Time filter */}
+              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
+                {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                      filter === key
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {filterLabels[key]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="bg-secondary/30 rounded-lg p-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
+              <p className="font-mono text-xl font-medium text-foreground mt-1">
+                {metric === 'revenue' ? (
+                  <>
+                    <span className="text-primary">$</span>
+                    {stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </>
+                ) : (
+                  stats.totalViews.toLocaleString()
+                )}
+              </p>
+            </div>
+            <div className="bg-secondary/30 rounded-lg p-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Daily Avg</p>
+              <p className="font-mono text-xl font-medium text-foreground mt-1">
+                {metric === 'revenue' ? (
+                  <>
+                    <span className="text-primary">$</span>
+                    {stats.avgRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </>
+                ) : (
+                  Math.round(stats.avgViews).toLocaleString()
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="p-6 pt-4">
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={filteredData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="hsl(var(--border))" 
+                  opacity={0.3}
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="formattedDate"
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={40}
+                />
+                <YAxis
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => metric === 'revenue' ? `$${value}` : `${(value / 1000).toFixed(0)}k`}
+                  width={60}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                
+                <Area
+                  type="monotone"
+                  dataKey={metric}
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill={metric === 'revenue' ? 'url(#revenueGradient)' : 'url(#viewsGradient)'}
+                  dot={false}
+                  activeDot={{
+                    r: 6,
+                    fill: 'hsl(var(--primary))',
+                    stroke: 'hsl(var(--background))',
+                    strokeWidth: 2,
+                  }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Advanced - Weekday Performance */}
-      <Collapsible>
-        <CollapsibleTrigger className="w-full px-6 py-3 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors group">
-          <span>Advanced</span>
-          <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="px-6 pb-5">
-            <p className="text-xs text-muted-foreground mb-3">
-              Avg {metric === 'revenue' ? 'revenue' : 'views'} by day of week
-            </p>
-            <div className="flex gap-1.5">
-              {weekdayStats.map((day) => {
-                const isBest = metric === 'revenue' ? day.isBestRevenue : day.isBestViews;
-                const value = metric === 'revenue' ? day.avgRevenue : day.avgViews;
-                const maxValue = Math.max(...weekdayStats.map(d => metric === 'revenue' ? d.avgRevenue : d.avgViews));
-                const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
-                
-                return (
-                  <div key={day.day} className="flex-1 flex flex-col items-center gap-1.5">
-                    <div className="w-full h-16 flex items-end justify-center">
-                      <div 
-                        className={`w-full max-w-[24px] rounded-t transition-all ${
-                          isBest 
-                            ? 'bg-primary' 
-                            : 'bg-secondary'
-                        }`}
-                        style={{ height: `${Math.max(heightPercent, 4)}%` }}
-                        title={metric === 'revenue' 
-                          ? `$${value.toFixed(2)} avg` 
-                          : `${Math.round(value).toLocaleString()} avg views`
-                        }
-                      />
-                    </div>
-                    <span className={`text-[10px] font-medium ${isBest ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {day.day}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {weekdayStats.some(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews) && (
-              <p className="text-[10px] text-muted-foreground mt-3 text-center">
-                Best: <span className="text-primary font-medium">
-                  {weekdayStats.find(d => metric === 'revenue' ? d.isBestRevenue : d.isBestViews)?.day}
-                </span>
-                {' · '}
-                {metric === 'revenue' 
-                  ? `$${weekdayStats.find(d => d.isBestRevenue)?.avgRevenue.toFixed(0)} avg`
-                  : `${Math.round(weekdayStats.find(d => d.isBestViews)?.avgViews || 0).toLocaleString()} avg`
-                }
-              </p>
-            )}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Weekday Widget - separate card below */}
+      <WeekdayWidget weekdayStats={weekdayStats} metric={metric} />
     </div>
   );
 };
