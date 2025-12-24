@@ -2,39 +2,30 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
 
-// Refined money sound - subtle and elegant
 const createMoneySound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   
   const playTick = () => {
     const now = audioContext.currentTime;
-    
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.type = 'sine';
     osc.connect(gain);
     gain.connect(audioContext.destination);
-    osc.frequency.setValueAtTime(1400, now);
-    osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
-    gain.gain.setValueAtTime(0.06, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
     osc.start(now);
-    osc.stop(now + 0.08);
+    osc.stop(now + 0.06);
   };
   
   return { playTick, audioContext };
 };
 
-interface ProfileCardProps {
-  name: string;
-  image: string;
-  revenue: number;
-  isLoading?: boolean;
-}
-
 const useCountUp = (
   end: number, 
-  duration: number = 2400, 
+  duration: number = 2000, 
   isLoading: boolean = false,
   onTick?: () => void
 ) => {
@@ -58,7 +49,7 @@ const useCountUp = (
       const currentValue = end * easeOut;
       setCount(currentValue);
 
-      const tickInterval = Math.max(end / 18, 150);
+      const tickInterval = Math.max(end / 15, 200);
       if (Math.floor(currentValue / tickInterval) > lastTickRef.current) {
         lastTickRef.current = Math.floor(currentValue / tickInterval);
         onTick?.();
@@ -77,6 +68,13 @@ const useCountUp = (
   return count;
 };
 
+interface ProfileCardProps {
+  name: string;
+  image: string;
+  revenue: number;
+  isLoading?: boolean;
+}
+
 const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
   const audioRef = useRef<{ playTick: () => void; audioContext: AudioContext } | null>(null);
   
@@ -87,37 +85,41 @@ const ProfileCard = ({ name, image, revenue, isLoading }: ProfileCardProps) => {
     audioRef.current.playTick();
   }, []);
 
-  const animatedRevenue = useCountUp(revenue, 2400, isLoading, handleTick);
+  const animatedRevenue = useCountUp(revenue, 2000, isLoading, handleTick);
   
-  const formattedRevenue = '€' + new Intl.NumberFormat('de-DE', {
+  const formattedRevenue = new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(animatedRevenue);
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Avatar */}
-      <div className="w-24 h-24 rounded-full overflow-hidden mb-6 ring-1 ring-border">
-        <img 
-          src={image} 
-          alt={name}
-          className="w-full h-full object-cover"
-        />
+    <div className="group relative">
+      {/* Glow effect */}
+      <div className="absolute -inset-px bg-gradient-to-b from-primary/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+      
+      {/* Card */}
+      <div className="relative bg-card border border-border/50 rounded-3xl p-8 md:p-10 transition-all duration-500 group-hover:border-primary/30">
+        <div className="flex items-center gap-5 mb-8">
+          <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-primary/50 transition-all duration-500">
+            <img src={image} alt={name} className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <p className="text-foreground font-medium">{name}</p>
+            <p className="text-muted-foreground text-sm">Creator</p>
+          </div>
+        </div>
+        
+        {isLoading ? (
+          <div className="h-16 bg-secondary animate-pulse rounded-lg" />
+        ) : (
+          <div>
+            <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Earnings</p>
+            <p className="font-mono text-4xl md:text-5xl font-medium text-foreground tracking-tight">
+              <span className="text-primary">€</span>{formattedRevenue}
+            </p>
+          </div>
+        )}
       </div>
-      
-      {/* Name */}
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.25em] mb-4">
-        {name}
-      </p>
-      
-      {/* Revenue */}
-      {isLoading ? (
-        <div className="h-14 w-48 bg-secondary/50 animate-pulse rounded" />
-      ) : (
-        <p className="font-display text-5xl md:text-6xl text-primary tracking-tight font-semibold">
-          {formattedRevenue}
-        </p>
-      )}
     </div>
   );
 };
@@ -135,16 +137,28 @@ interface RevenueDashboardProps {
 const RevenueDashboard = ({ data, isLoading = false }: RevenueDashboardProps) => {
   const senneRevenue = data?.senne ?? 0;
   const bowieRevenue = data?.bowie ?? 0;
+  // Total = Bowie * 2 as specified
+  const totalRevenue = bowieRevenue * 2;
+
+  const formattedTotal = new Intl.NumberFormat('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(totalRevenue);
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center px-8 py-16">
-      {/* Header */}
-      <p className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] mb-16">
-        Revenue · Last Month
-      </p>
+    <div className="min-h-[calc(100vh-96px)] flex flex-col items-center justify-center px-6 py-12">
+      {/* Total */}
+      <div className="text-center mb-16">
+        <p className="text-muted-foreground text-xs uppercase tracking-[0.25em] mb-3">
+          Total Revenue · Last Month
+        </p>
+        <p className="font-mono text-5xl md:text-7xl font-medium text-foreground tracking-tight">
+          <span className="text-primary">€</span>{formattedTotal}
+        </p>
+      </div>
       
       {/* Cards */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
+      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
         <ProfileCard
           name="Senne Jackson"
           image={senneImage}

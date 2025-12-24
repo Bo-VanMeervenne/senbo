@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, DollarSign } from "lucide-react";
+import { Search, TrendingUp, Coins } from "lucide-react";
 
 interface Video {
   title: string;
@@ -13,32 +13,25 @@ interface Video {
 
 const fetchVideos = async (): Promise<Video[]> => {
   const { data, error } = await supabase.functions.invoke('get-videos');
-  
-  if (error) {
-    throw new Error(error.message);
-  }
-  
+  if (error) throw new Error(error.message);
   return data?.videos || [];
 };
 
 const formatViews = (views: number): string => {
-  if (views >= 1000000) {
-    return (views / 1000000).toFixed(1) + 'M';
-  }
-  if (views >= 1000) {
-    return (views / 1000).toFixed(0) + 'K';
-  }
+  if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
+  if (views >= 1000) return (views / 1000).toFixed(0) + 'K';
   return views.toString();
 };
 
+// Video revenue is in dollars
 const formatRevenue = (revenue: number): string => {
-  return '€' + new Intl.NumberFormat('de-DE', {
+  return '$' + new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(revenue);
 };
 
-const VideoCard = ({ video }: { video: Video }) => {
+const VideoCard = ({ video, index }: { video: Video; index: number }) => {
   const thumbnailUrl = video.videoId 
     ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
     : null;
@@ -59,52 +52,42 @@ const VideoCard = ({ video }: { video: Video }) => {
   return (
     <div 
       onClick={handleClick}
-      className="group cursor-pointer"
+      className="group cursor-pointer animate-in fade-in slide-in-from-bottom-4"
+      style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
     >
-      {/* Thumbnail */}
-      <div className="relative aspect-[9/16] rounded-lg overflow-hidden mb-4 bg-secondary">
-        {thumbnailUrl ? (
+      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden mb-4 bg-secondary">
+        {thumbnailUrl && (
           <img 
             src={thumbnailUrl}
             alt={video.title}
             onError={handleImageError}
-            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-            No thumbnail
-          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-      
-      {/* Info */}
-      <div className="space-y-2">
-        <p className="text-foreground text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-300">
-          {video.title}
-        </p>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-muted-foreground">
-            {formatViews(video.views)}
-          </span>
-          <span className="text-primary font-mono font-medium">
-            {formatRevenue(video.revenue)}
-          </span>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Stats overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-foreground/80">{formatViews(video.views)}</span>
+            <span className="text-primary font-mono font-medium">{formatRevenue(video.revenue)}</span>
+          </div>
         </div>
       </div>
+      
+      <p className="text-foreground/80 text-sm leading-relaxed line-clamp-2 group-hover:text-foreground transition-colors">
+        {video.title}
+      </p>
     </div>
   );
 };
 
 const VideosSkeleton = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-    {Array.from({ length: 12 }).map((_, i) => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+    {Array.from({ length: 10 }).map((_, i) => (
       <div key={i}>
-        <div className="aspect-[9/16] bg-secondary/50 animate-pulse rounded-lg mb-4" />
-        <div className="space-y-2">
-          <div className="h-4 bg-secondary/50 animate-pulse rounded w-full" />
-          <div className="h-3 bg-secondary/50 animate-pulse rounded w-2/3" />
-        </div>
+        <div className="aspect-[9/16] bg-secondary/50 animate-pulse rounded-2xl mb-4" />
+        <div className="h-4 bg-secondary/50 animate-pulse rounded w-3/4" />
       </div>
     ))}
   </div>
@@ -125,83 +108,85 @@ const VideosView = () => {
 
   const filteredAndSortedVideos = useMemo(() => {
     if (!videos) return [];
-    
     let result = [...videos];
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(video => 
-        video.title.toLowerCase().includes(query)
-      );
+      result = result.filter(video => video.title.toLowerCase().includes(query));
     }
     
-    if (sortBy === 'views') {
-      result.sort((a, b) => b.views - a.views);
-    } else if (sortBy === 'revenue') {
-      result.sort((a, b) => b.revenue - a.revenue);
-    }
+    if (sortBy === 'views') result.sort((a, b) => b.views - a.views);
+    else if (sortBy === 'revenue') result.sort((a, b) => b.revenue - a.revenue);
     
     return result;
   }, [videos, searchQuery, sortBy]);
 
-  // Total revenue = 2x Bowie's earnings (as specified)
+  // Total in dollars (video revenue is in dollars)
   const totalRevenue = useMemo(() => {
     if (!videos) return 0;
-    const total = videos.reduce((sum, v) => sum + v.revenue, 0);
-    return total * 2;
+    return videos.reduce((sum, v) => sum + v.revenue, 0);
+  }, [videos]);
+
+  const totalViews = useMemo(() => {
+    if (!videos) return 0;
+    return videos.reduce((sum, v) => sum + v.views, 0);
   }, [videos]);
 
   return (
-    <div className="min-h-[calc(100vh-56px)] px-8 py-12">
+    <div className="min-h-[calc(100vh-96px)] px-6 py-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-          <div>
-            <p className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] mb-2">
-              Total Revenue
-            </p>
-            <p className="font-display text-4xl text-primary font-semibold">
-              {formatRevenue(totalRevenue)}
-            </p>
+        {/* Stats Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/50">
+          <div className="flex items-center gap-10">
+            <div>
+              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Views</p>
+              <p className="text-2xl font-medium text-foreground">{formatViews(totalViews)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Revenue</p>
+              <p className="text-2xl font-medium">
+                <span className="text-primary">$</span>
+                <span className="font-mono text-foreground">
+                  {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
+                </span>
+              </p>
+            </div>
           </div>
           
           {/* Controls */}
           <div className="flex items-center gap-2">
-            {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search videos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-44 pl-10 pr-4 py-2.5 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-52 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
             
-            {/* Sort by Views */}
             <button
               onClick={() => setSortBy(sortBy === 'views' ? 'none' : 'views')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
                 sortBy === 'views'
                   ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
               }`}
             >
-              <Eye className="w-4 h-4" />
+              <TrendingUp className="w-4 h-4" />
               Views
             </button>
             
-            {/* Sort by Revenue */}
             <button
               onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
                 sortBy === 'revenue'
                   ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
               }`}
             >
-              <DollarSign className="w-4 h-4" />
+              <Coins className="w-4 h-4" />
               Revenue
             </button>
           </div>
@@ -211,17 +196,13 @@ const VideosView = () => {
         {isLoading ? (
           <VideosSkeleton />
         ) : isError || !videos?.length ? (
-          <div className="text-center text-muted-foreground py-24 text-sm">
-            No videos found
-          </div>
+          <div className="text-center text-muted-foreground py-24">No videos found</div>
         ) : filteredAndSortedVideos.length === 0 ? (
-          <div className="text-center text-muted-foreground py-24 text-sm">
-            No results for "{searchQuery}"
-          </div>
+          <div className="text-center text-muted-foreground py-24">No results for "{searchQuery}"</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {filteredAndSortedVideos.map((video, index) => (
-              <VideoCard key={index} video={video} />
+              <VideoCard key={index} video={video} index={index} />
             ))}
           </div>
         )}
