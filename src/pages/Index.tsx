@@ -48,7 +48,7 @@ const Index = () => {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Videos
+              Senbo
             </button>
           </div>
         </div>

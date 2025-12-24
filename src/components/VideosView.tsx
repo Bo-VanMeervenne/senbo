@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, Coins } from "lucide-react";
+import { Search, Coins } from "lucide-react";
 
 interface Video {
   title: string;
@@ -66,11 +66,11 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Stats overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-foreground/80">{formatViews(video.views)}</span>
-            <span className="text-primary font-mono font-medium">{formatRevenue(video.revenue)}</span>
+        {/* Stats overlay - always visible */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 via-background/60 to-transparent">
+          <div className="flex flex-col gap-1">
+            <span className="text-foreground font-medium text-lg">{formatViews(video.views)} views</span>
+            <span className="text-primary font-mono font-semibold text-xl">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
@@ -165,18 +165,6 @@ const VideosView = () => {
                 className="w-52 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
-            
-            <button
-              onClick={() => setSortBy(sortBy === 'views' ? 'none' : 'views')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all ${
-                sortBy === 'views'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-              }`}
-            >
-              <TrendingUp className="w-4 h-4" />
-              Views
-            </button>
             
             <button
               onClick={() => setSortBy(sortBy === 'revenue' ? 'none' : 'revenue')}
