@@ -50,12 +50,14 @@ interface ProfileCardProps {
   image: string;
   revenueDollars: number;
   revenueEuros: number;
+  sharePercent: number;
   isLoading?: boolean;
 }
 
-const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: ProfileCardProps) => {
+const ProfileCard = ({ name, image, revenueDollars, revenueEuros, sharePercent, isLoading }: ProfileCardProps) => {
   const animatedDollars = useCountUp(revenueDollars, 2000, isLoading);
   const animatedEuros = useCountUp(revenueEuros, 2000, isLoading);
+  const animatedPercent = useCountUp(sharePercent, 2000, isLoading);
   
   const formattedDollars = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
@@ -88,45 +90,20 @@ const ProfileCard = ({ name, image, revenueDollars, revenueEuros, isLoading }: P
           <div className="h-24 bg-secondary animate-pulse rounded-lg" />
         ) : (
           <div className="mt-auto">
-            <p className="font-mono text-4xl lg:text-6xl font-medium text-foreground tracking-tight">
-              <span className="text-primary">$</span>{formattedDollars}
-            </p>
+            <div className="flex items-baseline gap-3">
+              <p className="font-mono text-4xl lg:text-6xl font-medium text-foreground tracking-tight">
+                <span className="text-primary">$</span>{formattedDollars}
+              </p>
+              <span className="font-mono text-sm text-muted-foreground">
+                {animatedPercent.toFixed(0)}%
+              </span>
+            </div>
             <p className="font-mono text-lg lg:text-2xl text-muted-foreground mt-3">
               <span className="text-primary/60">€</span>{formattedEuros}
             </p>
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-interface ShareBarProps {
-  senneShare: number;
-  bowieShare: number;
-  isLoading?: boolean;
-}
-
-const ShareBar = ({ senneShare, bowieShare, isLoading }: ShareBarProps) => {
-  const animatedSenne = useCountUp(senneShare, 2000, isLoading);
-  const animatedBowie = useCountUp(bowieShare, 2000, isLoading);
-
-  return (
-    <div className="w-full max-w-4xl flex items-center gap-6">
-      <span className="text-sm text-foreground font-mono font-medium min-w-[48px] text-right">{animatedSenne.toFixed(0)}%</span>
-      
-      {isLoading ? (
-        <div className="flex-1 h-2 bg-primary/10 animate-pulse rounded-full" />
-      ) : (
-        <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden backdrop-blur-sm">
-          <div 
-            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(var(--primary),0.3)]"
-            style={{ width: `${animatedSenne}%` }}
-          />
-        </div>
-      )}
-      
-      <span className="text-sm text-foreground font-mono font-medium min-w-[48px]">{animatedBowie.toFixed(0)}%</span>
     </div>
   );
 };
@@ -181,23 +158,22 @@ const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
       {/* Header */}
       <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">{headerText}</p>
       
-      {/* Share Bar */}
-      <ShareBar senneShare={senneShare} bowieShare={bowieShare} isLoading={isLoading} />
-      
       {/* Cards */}
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mt-10">
+      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         <ProfileCard
           name="Senne Jackson"
           image={senneImage}
           revenueDollars={senneDollars}
           revenueEuros={senneEuros}
+          sharePercent={senneShare}
           isLoading={isLoading}
         />
         <ProfileCard
-          name="Bowie"
+          name="Bowie Jackson"
           image={bowieImage}
           revenueDollars={bowieDollars}
           revenueEuros={bowieEuros}
+          sharePercent={bowieShare}
           isLoading={isLoading}
         />
       </div>
