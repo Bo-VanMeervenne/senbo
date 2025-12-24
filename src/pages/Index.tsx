@@ -9,7 +9,7 @@ type MonthTab = 'last' | 'current';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>('revenue');
-  const [monthTab, setMonthTab] = useState<MonthTab>('last');
+  const [monthTab, setMonthTab] = useState<MonthTab>('current');
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,16 +44,6 @@ const Index = () => {
         <div className="flex justify-center mt-3">
           <div className="flex items-center gap-1 p-0.5 bg-secondary/50 backdrop-blur-xl rounded-lg border border-border/30">
             <button
-              onClick={() => setMonthTab('last')}
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                monthTab === 'last' 
-                  ? 'bg-card text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Last Month
-            </button>
-            <button
               onClick={() => setMonthTab('current')}
               className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                 monthTab === 'current' 
@@ -62,6 +52,16 @@ const Index = () => {
               }`}
             >
               Current Month
+            </button>
+            <button
+              onClick={() => setMonthTab('last')}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                monthTab === 'last' 
+                  ? 'bg-card text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Last Month
             </button>
           </div>
         </div>
