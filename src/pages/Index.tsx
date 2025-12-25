@@ -98,23 +98,12 @@ const Index = () => {
 
             {/* Source filter - only for videos */}
             {activeTab === 'videos' && (
-              <div className="relative flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
-                <div 
-                  className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-out ${
-                    sourceFilter === 'senne' ? 'bg-orange-500' : 'bg-card'
-                  } ${
-                    sourceFilter === 'all' 
-                      ? 'left-1 w-[calc(33.33%-4px)]' 
-                      : sourceFilter === 'senbo' 
-                        ? 'left-[calc(33.33%+1px)] w-[calc(33.33%-2px)]' 
-                        : 'left-[calc(66.66%+2px)] w-[calc(33.33%-4px)]'
-                  }`}
-                />
+              <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
                 <button
                   onClick={() => setSourceFilter('all')}
-                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'all' 
-                      ? 'text-foreground' 
+                      ? 'bg-card text-foreground shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -122,19 +111,19 @@ const Index = () => {
                 </button>
                 <button
                   onClick={() => setSourceFilter('senbo')}
-                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'senbo' 
-                      ? 'text-foreground' 
+                      ? 'bg-card text-foreground shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  S&B
+                  SenBo
                 </button>
                 <button
                   onClick={() => setSourceFilter('senne')}
-                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'senne' 
-                      ? 'text-white' 
+                      ? 'bg-orange-500 text-white shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
