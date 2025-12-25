@@ -37,9 +37,9 @@ const questions: Question[] = [
   { id: 'more-watchtime', text: 'Which video has MORE watch time?', metric: 'minutesWatched', higherWins: true, icon: Clock },
 ];
 
-const fetchAllVideos = async (): Promise<Video[]> => {
+const fetchAllVideos = async (month: 'current' | 'last'): Promise<Video[]> => {
   const { data, error } = await supabase.functions.invoke('get-all-videos', {
-    body: { month: 'current' }
+    body: { month }
   });
   if (error) throw new Error(error.message);
   return (data?.videos || []).filter((v: Video) => v.videoId);
@@ -77,35 +77,72 @@ const LearnView = ({ month }: LearnViewProps) => {
 
   const { data: allVideos = [], isLoading } = useQuery({
     queryKey: ['learn-videos', month],
-    queryFn: fetchAllVideos,
+    queryFn: () => fetchAllVideos(month),
     staleTime: 1000 * 60 * 5,
   });
 
-  // Generate random pairs of videos with questions - ensuring no duplicates
+  // Get the month label for questions
+  const monthLabel = month === 'current' ? 'this month' : 'last month';
+
+  // Generate random pairs of videos with questions - ensuring no duplicates and balanced sources
   const rounds = useMemo(() => {
     if (allVideos.length < 2) return [];
+    
+    // Separate videos by source
+    const senboVideos = allVideos.filter(v => v.source === 'senbo');
+    const senneVideos = allVideos.filter(v => v.source === 'senne');
     
     const pairs: { left: Video; right: Video; question: Question }[] = [];
     const usedPairs = new Set<string>();
     
-    for (let i = 0; i < 50 && pairs.length < 50; i++) {
-      // Pick two different random videos
-      const leftIdx = Math.floor(Math.random() * allVideos.length);
-      let rightIdx = Math.floor(Math.random() * allVideos.length);
+    // Try to create balanced pairs: senbo vs senne, senbo vs senbo, senne vs senne
+    const pairTypes: Array<'mixed' | 'senbo' | 'senne'> = ['mixed', 'mixed', 'senbo', 'senne'];
+    
+    for (let attempt = 0; attempt < 200 && pairs.length < 50; attempt++) {
+      const pairType = pairTypes[attempt % pairTypes.length];
       
-      // Ensure right is different from left
-      while (rightIdx === leftIdx || allVideos[leftIdx].videoId === allVideos[rightIdx].videoId) {
-        rightIdx = Math.floor(Math.random() * allVideos.length);
+      let leftVideo: Video | undefined;
+      let rightVideo: Video | undefined;
+      
+      if (pairType === 'mixed' && senboVideos.length > 0 && senneVideos.length > 0) {
+        // One from each source
+        leftVideo = senboVideos[Math.floor(Math.random() * senboVideos.length)];
+        rightVideo = senneVideos[Math.floor(Math.random() * senneVideos.length)];
+      } else if (pairType === 'senbo' && senboVideos.length >= 2) {
+        // Both from senbo
+        const idx1 = Math.floor(Math.random() * senboVideos.length);
+        let idx2 = Math.floor(Math.random() * senboVideos.length);
+        while (idx2 === idx1) idx2 = Math.floor(Math.random() * senboVideos.length);
+        leftVideo = senboVideos[idx1];
+        rightVideo = senboVideos[idx2];
+      } else if (pairType === 'senne' && senneVideos.length >= 2) {
+        // Both from senne
+        const idx1 = Math.floor(Math.random() * senneVideos.length);
+        let idx2 = Math.floor(Math.random() * senneVideos.length);
+        while (idx2 === idx1) idx2 = Math.floor(Math.random() * senneVideos.length);
+        leftVideo = senneVideos[idx1];
+        rightVideo = senneVideos[idx2];
+      } else {
+        // Fallback: pick any two different videos
+        const idx1 = Math.floor(Math.random() * allVideos.length);
+        let idx2 = Math.floor(Math.random() * allVideos.length);
+        while (idx2 === idx1 || allVideos[idx1].videoId === allVideos[idx2].videoId) {
+          idx2 = Math.floor(Math.random() * allVideos.length);
+        }
+        leftVideo = allVideos[idx1];
+        rightVideo = allVideos[idx2];
       }
       
-      const pairKey = [allVideos[leftIdx].videoId, allVideos[rightIdx].videoId].sort().join('-');
+      if (!leftVideo || !rightVideo || leftVideo.videoId === rightVideo.videoId) continue;
+      
+      const pairKey = [leftVideo.videoId, rightVideo.videoId].sort().join('-');
       if (usedPairs.has(pairKey)) continue;
       usedPairs.add(pairKey);
       
       const question = questions[Math.floor(Math.random() * questions.length)];
       pairs.push({
-        left: allVideos[leftIdx],
-        right: allVideos[rightIdx],
+        left: leftVideo,
+        right: rightVideo,
         question
       });
     }
@@ -214,6 +251,7 @@ const LearnView = ({ month }: LearnViewProps) => {
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-card border border-border/50 rounded-2xl shadow-lg">
             <QuestionIcon className="w-5 h-5 text-primary" />
             <span className="text-lg font-medium">{currentRound?.question.text}</span>
+            <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">{monthLabel}</span>
           </div>
         </motion.div>
       </AnimatePresence>
