@@ -58,7 +58,7 @@ const DeviceViewsChart = () => {
       <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-secondary/50 rounded w-1/3" />
-          <div className="h-24 bg-secondary/30 rounded" />
+          <div className="h-32 bg-secondary/30 rounded" />
         </div>
       </div>
     );
@@ -92,22 +92,22 @@ const DeviceViewsChart = () => {
 
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
+      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-5">
         <PieChart className="w-5 h-5 text-primary" />
         Views by Device
       </h3>
       
-      <div className="flex items-center gap-4">
-        {/* Compact pie chart */}
-        <div className="w-24 h-24 flex-shrink-0">
+      <div className="flex items-center gap-8">
+        {/* Pie chart with proper sizing */}
+        <div className="w-32 h-32 flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsPie>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={25}
-                outerRadius={45}
+                innerRadius={32}
+                outerRadius={60}
                 paddingAngle={2}
                 dataKey="views"
               >
@@ -124,12 +124,12 @@ const DeviceViewsChart = () => {
           </ResponsiveContainer>
         </div>
         
-        {/* Legend in a compact grid */}
-        <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
+        {/* Compact legend */}
+        <div className="flex-1 space-y-1.5">
           {chartData.map((item, index) => (
             <div 
               key={item.device}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 py-0.5"
             >
               <div 
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -138,10 +138,10 @@ const DeviceViewsChart = () => {
               <span className="text-muted-foreground flex-shrink-0">
                 {deviceIcons[item.device]}
               </span>
-              <span className="text-sm text-foreground font-medium truncate">
+              <span className="text-sm text-foreground">
                 {item.name}
               </span>
-              <span className="text-sm text-muted-foreground ml-auto">
+              <span className="text-sm font-medium text-foreground ml-auto">
                 {item.percentage}%
               </span>
             </div>
