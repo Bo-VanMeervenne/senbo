@@ -18,9 +18,9 @@ const GeneralView = () => {
         
         <SubscriberStatsCards />
         
-        <TrafficSourceChart />
-        
         <CountryRevenueTable />
+        
+        <TrafficSourceChart />
       </div>
     </div>
   );
