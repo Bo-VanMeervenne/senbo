@@ -278,17 +278,6 @@ const SenneVideosView = ({ month }: SenneVideosViewProps) => {
           
           {/* Controls */}
           <div className="flex items-center gap-2">
-            <div className="relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-orange-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-52 pl-10 pr-4 py-2.5 bg-transparent border border-border/50 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500/50 focus:bg-card/50 transition-all duration-300"
-              />
-            </div>
-            
             <button
               onClick={() => setSortBy(sortBy === 'newest' ? 'oldest' : 'newest')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
@@ -324,6 +313,19 @@ const SenneVideosView = ({ month }: SenneVideosViewProps) => {
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               More
             </button>
+
+            <div className="w-px h-8 bg-border/30 mx-1" />
+
+            <div className="relative group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-orange-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-40 pl-10 pr-4 py-2.5 bg-transparent border border-border/50 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500/50 focus:bg-card/50 transition-all duration-300"
+              />
+            </div>
           </div>
         </div>
 
