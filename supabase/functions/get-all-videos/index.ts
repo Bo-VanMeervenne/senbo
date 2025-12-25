@@ -36,8 +36,9 @@ serve(async (req) => {
     const senneSheetName = month === 'current' ? 'Senne Only Videos (Current Month)' : 'Senne Only Videos (Last Month)';
     const summarySheetName = month === 'current' ? 'Summary (Current Month)' : 'Summary (Last Month)';
     
-    const senboRange = encodeURIComponent(`${senboSheetName}!A2:O500`);
-    const senneRange = encodeURIComponent(`${senneSheetName}!A2:N500`);
+    // Fetch ALL rows - no limit (use A2:O for all rows in column range)
+    const senboRange = encodeURIComponent(`${senboSheetName}!A2:O`);
+    const senneRange = encodeURIComponent(`${senneSheetName}!A2:N`);
     // Summary: C2 = Total Views for SenBo, H2 = Bo revenue (SenBo), I2 = Senne revenue
     const summaryRange = encodeURIComponent(`${summarySheetName}!C2:I2`);
     
