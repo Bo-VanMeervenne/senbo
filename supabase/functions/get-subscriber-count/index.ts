@@ -33,6 +33,7 @@ serve(async (req) => {
     const rows = data.values || [];
     
     console.log('Total rows fetched:', rows.length);
+    console.log('All rows:', JSON.stringify(rows));
     
     if (rows.length < 2) {
       return new Response(
@@ -44,11 +45,33 @@ serve(async (req) => {
     // Get the last row (most recent data)
     const lastRow = rows[rows.length - 1];
     
+    console.log('Last row raw data:', JSON.stringify(lastRow));
+    
     // Parse the data: Timestamp, Subscribers, Total Views, Total Videos
     const parseNumber = (value: string): number => {
       if (!value) return 0;
-      const cleaned = value.toString().replace(/[^0-9.-]/g, '');
-      return parseInt(cleaned) || 0;
+      console.log('Parsing value:', value);
+      // Handle European format with dots as thousand separators (e.g., "2.220.000")
+      // First remove spaces, then handle the format
+      let cleaned = value.toString().trim();
+      // If it contains dots but no comma, treat dots as thousand separators
+      if (cleaned.includes('.') && !cleaned.includes(',')) {
+        cleaned = cleaned.replace(/\./g, '');
+      }
+      // If it contains comma as decimal separator (European), convert it
+      if (cleaned.includes(',')) {
+        // Check if comma is decimal separator (e.g., "2.220.000,50")
+        const parts = cleaned.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) {
+          cleaned = parts[0].replace(/\./g, '') + '.' + parts[1];
+        } else {
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      }
+      cleaned = cleaned.replace(/[^0-9.-]/g, '');
+      const result = parseInt(cleaned) || 0;
+      console.log('Parsed result:', result);
+      return result;
     };
     
     const result = {
