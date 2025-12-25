@@ -25,12 +25,26 @@ interface Video {
   source: 'senbo' | 'senne';
 }
 
-const fetchAllVideos = async (month: 'last' | 'current'): Promise<Video[]> => {
+interface VideoTotals {
+  senbo: { revenue: number; views: number };
+  senne: { revenue: number; views: number };
+  combined: { revenue: number; views: number };
+}
+
+interface FetchResult {
+  videos: Video[];
+  totals?: VideoTotals;
+}
+
+const fetchAllVideos = async (month: 'last' | 'current'): Promise<FetchResult> => {
   const { data, error } = await supabase.functions.invoke('get-all-videos', {
     body: { month }
   });
   if (error) throw new Error(error.message);
-  return data?.videos || [];
+  return { 
+    videos: data?.videos || [],
+    totals: data?.totals
+  };
 };
 
 const formatViews = (views: number): string => {
@@ -197,12 +211,15 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
     setDateRange(getDefaultDateRange());
   }, [month]);
 
-  const { data: videos, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['all-videos', month],
     queryFn: () => fetchAllVideos(month),
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
+
+  const videos = data?.videos || [];
+  const apiTotals = data?.totals;
 
   const handleStatsClick = (video: Video) => {
     setSelectedVideo(video);
@@ -294,13 +311,34 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
     return result;
   }, [videos, searchQuery, sortBy, sourceFilter, dateRange]);
 
-  const totalRevenue = useMemo(() => {
-    return filteredAndSortedVideos.reduce((sum, v) => sum + v.revenue, 0);
-  }, [filteredAndSortedVideos]);
-
-  const totalViews = useMemo(() => {
-    return filteredAndSortedVideos.reduce((sum, v) => sum + v.views, 0);
-  }, [filteredAndSortedVideos]);
+  // Use API totals for accurate data, fall back to summing filtered videos
+  const { totalRevenue, totalViews } = useMemo(() => {
+    // If no filters are applied (all source, no search, no custom date range), use API totals
+    const isUnfiltered = sourceFilter === 'all' && !searchQuery.trim() && !showAdvanced;
+    
+    if (isUnfiltered && apiTotals) {
+      return {
+        totalRevenue: apiTotals.combined.revenue,
+        totalViews: apiTotals.combined.views
+      };
+    } else if (sourceFilter === 'senbo' && !searchQuery.trim() && !showAdvanced && apiTotals) {
+      return {
+        totalRevenue: apiTotals.senbo.revenue,
+        totalViews: apiTotals.senbo.views
+      };
+    } else if (sourceFilter === 'senne' && !searchQuery.trim() && !showAdvanced && apiTotals) {
+      return {
+        totalRevenue: apiTotals.senne.revenue,
+        totalViews: apiTotals.senne.views
+      };
+    }
+    
+    // Fall back to summing filtered videos when filters are applied
+    return {
+      totalRevenue: filteredAndSortedVideos.reduce((sum, v) => sum + v.revenue, 0),
+      totalViews: filteredAndSortedVideos.reduce((sum, v) => sum + v.views, 0)
+    };
+  }, [filteredAndSortedVideos, sourceFilter, searchQuery, showAdvanced, apiTotals]);
 
   const avgViewsPerVideo = useMemo(() => {
     if (filteredAndSortedVideos.length === 0) return 0;
@@ -480,7 +518,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
         {/* Grid */}
         {isLoading ? (
           <VideosSkeleton />
-        ) : isError || !videos?.length ? (
+        ) : isError || !videos.length ? (
           <div className="text-center text-muted-foreground py-24">No videos found</div>
         ) : filteredAndSortedVideos.length === 0 ? (
           <div className="text-center text-muted-foreground py-24">No results for "{searchQuery}"</div>
