@@ -76,23 +76,24 @@ const Index = () => {
         {/* Month sub-tabs - only show for revenue, videos, and senne */}
         {activeTab !== 'general' && (
           <div className="flex justify-center mt-3">
-            <div className="flex items-center gap-1 p-0.5 bg-secondary/50 backdrop-blur-xl rounded-lg border border-border/30">
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={() => setMonthTab('current')}
-                className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                   monthTab === 'current' 
-                    ? 'bg-card text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-foreground' 
+                    : 'text-muted-foreground/50 hover:text-muted-foreground'
                 }`}
               >
                 Current Month
               </button>
+              <span className="text-muted-foreground/30 text-xs">|</span>
               <button
                 onClick={() => setMonthTab('last')}
-                className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                   monthTab === 'last' 
-                    ? 'bg-card text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-foreground' 
+                    : 'text-muted-foreground/50 hover:text-muted-foreground'
                 }`}
               >
                 Last Month
