@@ -150,18 +150,30 @@ serve(async (req) => {
 
     console.log('Daily revenue dates:', Object.keys(dailyRevenueMap).length);
     console.log('Bo split dates:', Object.keys(boSplitMap).length);
+    console.log('Union dates:', new Set([...Object.keys(dailyRevenueMap), ...Object.keys(boSplitMap)]).size);
 
-    // Build timeline data - for each day with revenue, calculate split
-    const timelineData: { date: string; senneRevenue: number; boRevenue: number }[] = [];
-    
-    for (const [date, totalRevenue] of Object.entries(dailyRevenueMap)) {
+    // Build timeline data on the UNION of dates (daily revenue can lag 2-3 days)
+    // This ensures Bo totals still include the latest video days even if Total Revenue is missing.
+    const allDates = new Set<string>([
+      ...Object.keys(dailyRevenueMap),
+      ...Object.keys(boSplitMap),
+    ]);
+
+    const timelineData: { date: string; senneRevenue: number | null; boRevenue: number; totalRevenue: number | null }[] = [];
+
+    for (const date of allDates) {
+      const totalRevenue = Object.prototype.hasOwnProperty.call(dailyRevenueMap, date)
+        ? dailyRevenueMap[date]
+        : null;
+
       const boRevenue = boSplitMap[date] || 0;
-      const senneRevenue = totalRevenue - boRevenue;
-      
+      const senneRevenue = totalRevenue === null ? null : Math.max(0, totalRevenue - boRevenue);
+
       timelineData.push({
         date,
-        senneRevenue: Math.max(0, senneRevenue),
-        boRevenue
+        totalRevenue,
+        senneRevenue,
+        boRevenue,
       });
     }
 
