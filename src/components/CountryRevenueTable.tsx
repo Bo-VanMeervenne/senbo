@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ChevronRight } from "lucide-react";
+import { Globe, ChevronRight, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -134,10 +135,20 @@ const CountryRevenueTable = () => {
 
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6">
-        <Globe className="w-5 h-5 text-primary" />
-        Revenue by Country
-      </h3>
+      <div className="flex items-center gap-2 mb-6">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" />
+          Revenue by Country
+        </h3>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-[200px] text-xs">
+            Revenue data delayed 3-5 days. All-time aggregated data.
+          </TooltipContent>
+        </Tooltip>
+      </div>
       
       <div className="overflow-x-auto">
         <CountryTableContent data={data} />

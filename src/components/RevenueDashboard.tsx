@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
 import RevenueSplitChart from "./RevenueSplitChart";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 const useCountUp = (
   end: number, 
   duration: number = 2000, 
@@ -149,14 +151,26 @@ const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
   const bowieShare = totalDollars > 0 ? (bowieDollars / totalDollars) * 100 : 50;
 
   const headerText = month === 'current' 
-    ? 'Revenue from current month (live)' 
-    : 'Revenue from last month, updated on the 20th';
+    ? 'Revenue from current month' 
+    : 'Revenue from last month';
 
   return (
     <div className="min-h-[calc(100vh-128px)] flex flex-col items-center px-6 py-12">
       
       {/* Header */}
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">{headerText}</p>
+      <div className="flex items-center gap-2 mb-8">
+        <p className="text-muted-foreground text-xs uppercase tracking-[0.2em]">{headerText}</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3 h-3 text-muted-foreground/50 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+            {month === 'current' 
+              ? 'Revenue data is delayed 3-5 days. Recent figures are estimates.' 
+              : 'Finalized data from previous month.'}
+          </TooltipContent>
+        </Tooltip>
+      </div>
       
       {/* Cards */}
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
