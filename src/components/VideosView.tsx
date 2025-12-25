@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play } from "lucide-react";
+import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp } from "lucide-react";
 import VideoStatsDialog from "./VideoStatsDialog";
 
 interface Video {
@@ -240,12 +240,22 @@ const VideosView = ({ month }: VideosViewProps) => {
     return videos.reduce((sum, v) => sum + v.views, 0);
   }, [videos]);
 
+  const avgViewsPerVideo = useMemo(() => {
+    if (!videos || videos.length === 0) return 0;
+    return Math.round(totalViews / videos.length);
+  }, [videos, totalViews]);
+
   return (
     <div className="min-h-[calc(100vh-128px)] px-6 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Stats Bar */}
         <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/30">
           <div className="flex items-center gap-12">
+            <div className="group">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Videos</p>
+              <p className="text-3xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
+            </div>
+            <div className="w-px h-12 bg-border/30" />
             <div className="group">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Views</p>
               <p className="text-3xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
@@ -262,8 +272,11 @@ const VideosView = ({ month }: VideosViewProps) => {
             </div>
             <div className="w-px h-12 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Videos</p>
-              <p className="text-3xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                Avg Views
+              </p>
+              <p className="text-3xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
             </div>
           </div>
           

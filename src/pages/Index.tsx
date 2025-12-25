@@ -58,7 +58,7 @@ const Index = () => {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              SENBO
+              Senne & Bo
             </button>
             <button
               onClick={() => setActiveTab('senne')}
