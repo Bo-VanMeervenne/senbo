@@ -58,7 +58,7 @@ const DeviceViewsChart = () => {
       <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-secondary/50 rounded w-1/3" />
-          <div className="h-48 bg-secondary/30 rounded-full w-48 mx-auto" />
+          <div className="h-24 bg-secondary/30 rounded" />
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ const DeviceViewsChart = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-card/95 backdrop-blur-sm border border-border/50 rounded-lg p-3 shadow-lg">
+        <div className="bg-card border border-border rounded-lg p-3 shadow-lg z-50">
           <p className="font-medium text-foreground">{data.name}</p>
           <p className="text-sm text-muted-foreground">
             {formatViews(data.views)} views ({data.percentage}%)
@@ -92,21 +92,22 @@ const DeviceViewsChart = () => {
 
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6">
+      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
         <PieChart className="w-5 h-5 text-primary" />
         Views by Device
       </h3>
       
-      <div className="flex flex-col md:flex-row items-center gap-6">
-        <div className="w-48 h-48">
+      <div className="flex items-center gap-4">
+        {/* Compact pie chart */}
+        <div className="w-24 h-24 flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsPie>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                innerRadius={25}
+                outerRadius={45}
                 paddingAngle={2}
                 dataKey="views"
               >
@@ -123,32 +124,26 @@ const DeviceViewsChart = () => {
           </ResponsiveContainer>
         </div>
         
-        <div className="flex-1 space-y-3">
+        {/* Legend in a compact grid */}
+        <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
           {chartData.map((item, index) => (
             <div 
               key={item.device}
-              className="flex items-center justify-between p-2 rounded-lg hover:bg-secondary/20 transition-colors"
+              className="flex items-center gap-2"
             >
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <span className="text-muted-foreground">
-                  {deviceIcons[item.device]}
-                </span>
-                <span className="text-foreground font-medium">
-                  {item.name}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-foreground font-medium">
-                  {item.percentage}%
-                </span>
-                <span className="text-muted-foreground text-sm ml-2">
-                  ({formatViews(item.views)})
-                </span>
-              </div>
+              <div 
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <span className="text-muted-foreground flex-shrink-0">
+                {deviceIcons[item.device]}
+              </span>
+              <span className="text-sm text-foreground font-medium truncate">
+                {item.name}
+              </span>
+              <span className="text-sm text-muted-foreground ml-auto">
+                {item.percentage}%
+              </span>
             </div>
           ))}
         </div>

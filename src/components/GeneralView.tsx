@@ -11,14 +11,12 @@ const GeneralView = () => {
         Overall Performance
       </p>
       
-      <div className="w-full max-w-4xl space-y-8">
+      <div className="w-full max-w-4xl space-y-6">
         <DailyRevenueChart />
         
-        {/* Device and Subscriber stats side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DeviceViewsChart />
-          <SubscriberStatsCards />
-        </div>
+        <DeviceViewsChart />
+        
+        <SubscriberStatsCards />
         
         <TrafficSourceChart />
         
