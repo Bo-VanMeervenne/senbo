@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Clock, ThumbsUp, Share2, UserPlus, Calendar, Play, DollarSign, Receipt } from "lucide-react";
+import { Eye, Clock, ThumbsUp, Share2, UserPlus, Calendar, Play, DollarSign } from "lucide-react";
 
 interface Video {
   title: string;
@@ -120,15 +120,9 @@ const SenneVideoStatsDialog = ({ video, open, onOpenChange }: SenneVideoStatsDia
         <div className="grid grid-cols-2 gap-3">
           <StatCard 
             icon={DollarSign} 
-            label="Revenue (After Tax)" 
+            label="Revenue" 
             value={`$${video.revenueAfterTax.toFixed(2)}`}
             accent
-          />
-          <StatCard 
-            icon={Receipt} 
-            label="Gross / Tax" 
-            value={`$${video.revenue.toFixed(2)}`}
-            subValue={`-$${video.tax.toFixed(2)} tax (15%)`}
           />
           <StatCard 
             icon={Eye} 
