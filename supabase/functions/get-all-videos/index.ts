@@ -141,29 +141,24 @@ serve(async (req) => {
         source: 'senne' as const,
       }));
 
-    // Combine and deduplicate by videoId
+    // Combine videos using composite key (source + videoId) to prevent cross-source deduplication
     const videoMap = new Map();
     
-    // Add Senne & Bo videos first
+    // Add Senne & Bo videos
     senboVideos.forEach((video: any) => {
-      if (video.videoId) {
-        videoMap.set(video.videoId, video);
-      } else {
-        videoMap.set(video.url, video);
-      }
+      const key = `senbo_${video.videoId || video.url}`;
+      videoMap.set(key, video);
     });
     
-    // Add Senne Only videos (will overwrite if same videoId, or add if unique)
+    // Add Senne Only videos - always add, they're from a different channel
     senneVideos.forEach((video: any) => {
-      const key = video.videoId || video.url;
-      if (!videoMap.has(key)) {
-        videoMap.set(key, video);
-      }
+      const key = `senne_${video.videoId || video.url}`;
+      videoMap.set(key, video);
     });
 
     const combinedVideos = Array.from(videoMap.values());
 
-    console.log(`Parsed ${senboVideos.length} Senne & Bo + ${senneVideos.length} Senne Only = ${combinedVideos.length} unique videos`);
+    console.log(`Parsed ${senboVideos.length} Senne & Bo + ${senneVideos.length} Senne Only = ${combinedVideos.length} total videos`);
 
     return new Response(
       JSON.stringify({ videos: combinedVideos }),

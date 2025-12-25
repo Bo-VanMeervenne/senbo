@@ -215,16 +215,16 @@ const RevenueSplitChart = () => {
 
           {/* Totals / Legend */}
           {!isLoading && filteredData.length > 0 && (
-            <div className="flex justify-center gap-12 mt-8 pt-6 border-t border-border/30">
-              <div className="text-center">
-                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Senne</p>
-                <p className="font-mono text-2xl text-primary font-medium">
+            <div className="flex justify-center gap-6 sm:gap-12 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border/30">
+              <div className="text-center min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs uppercase tracking-wider mb-1 sm:mb-2">Senne</p>
+                <p className="font-mono text-lg sm:text-2xl text-primary font-medium truncate">
                   {formatCurrency(totals.senne)}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Bo</p>
-                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(160, 50%, 60%)" }}>
+              <div className="text-center min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs uppercase tracking-wider mb-1 sm:mb-2">Bo</p>
+                <p className="font-mono text-lg sm:text-2xl font-medium truncate" style={{ color: "hsl(160, 50%, 60%)" }}>
                   {formatCurrency(totals.bo)}
                 </p>
               </div>
