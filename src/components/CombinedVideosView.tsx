@@ -233,6 +233,19 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
     };
 
+    // Filter by date range
+    if (dateRange.from && dateRange.to) {
+      const fromDate = new Date(dateRange.from);
+      fromDate.setHours(0, 0, 0, 0);
+      const toDate = new Date(dateRange.to);
+      toDate.setHours(23, 59, 59, 999);
+      
+      result = result.filter(video => {
+        const videoDate = parseDate(video.publishDate);
+        return videoDate >= fromDate && videoDate <= toDate;
+      });
+    }
+
     const parseDuration = (d: string) => {
       if (!d) return 0;
       const parts = d.split(':');
@@ -270,7 +283,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
     }
     
     return result;
-  }, [videos, searchQuery, sortBy, sourceFilter]);
+  }, [videos, searchQuery, sortBy, sourceFilter, dateRange]);
 
   const totalRevenue = useMemo(() => {
     return filteredAndSortedVideos.reduce((sum, v) => sum + v.revenue, 0);
@@ -432,16 +445,21 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                   defaultMonth={dateRange.from}
                   selected={{ from: dateRange.from, to: dateRange.to }}
                   onSelect={(range) => {
-                    if (range?.from && range?.to) {
-                      setDateRange({ from: range.from, to: range.to });
-                    } else if (range?.from) {
-                      setDateRange({ from: range.from, to: range.from });
+                    if (range?.from) {
+                      setDateRange({ 
+                        from: range.from, 
+                        to: range.to || range.from 
+                      });
                     }
                   }}
                   numberOfMonths={1}
                   disabled={(date) => {
                     const defaultRange = getDefaultDateRange();
-                    return date < defaultRange.from || date > defaultRange.to;
+                    const fromDate = new Date(defaultRange.from);
+                    fromDate.setHours(0, 0, 0, 0);
+                    const toDate = new Date(defaultRange.to);
+                    toDate.setHours(23, 59, 59, 999);
+                    return date < fromDate || date > toDate;
                   }}
                   className={cn("p-3 pointer-events-auto")}
                 />
