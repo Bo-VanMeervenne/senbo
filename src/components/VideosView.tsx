@@ -417,10 +417,7 @@ const VideosView = ({ month }: VideosViewProps) => {
                     }
                   }}
                   numberOfMonths={1}
-                  disabled={(date) => {
-                    const defaultRange = getDefaultDateRange();
-                    return date < defaultRange.from || date > defaultRange.to;
-                  }}
+                  disabled={(date) => date > new Date()}
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
