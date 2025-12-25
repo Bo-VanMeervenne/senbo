@@ -180,12 +180,15 @@ interface CombinedVideosViewProps {
   sourceFilter: SourceFilter;
 }
 
+const VIDEOS_PER_PAGE = 50;
+
 const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(VIDEOS_PER_PAGE);
 
   // Date range based on month tab
   const getDefaultDateRange = (): DateRange => {
@@ -206,10 +209,11 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
   
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
 
-  // Reset date range when month changes
+  // Reset date range and visible count when month or sourceFilter changes
   useMemo(() => {
     setDateRange(getDefaultDateRange());
-  }, [month]);
+    setVisibleCount(VIDEOS_PER_PAGE);
+  }, [month, sourceFilter]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['all-videos', month],
@@ -502,16 +506,30 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
         ) : filteredAndSortedVideos.length === 0 ? (
           <div className="text-center text-muted-foreground py-24">No results for "{searchQuery}"</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {filteredAndSortedVideos.map((video, index) => (
-              <VideoCard 
-                key={video.videoId || index} 
-                video={video} 
-                index={index}
-                onStatsClick={handleStatsClick}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              {filteredAndSortedVideos.slice(0, visibleCount).map((video, index) => (
+                <VideoCard 
+                  key={video.videoId || index} 
+                  video={video} 
+                  index={index}
+                  onStatsClick={handleStatsClick}
+                />
+              ))}
+            </div>
+            
+            {/* Load More Button */}
+            {visibleCount < filteredAndSortedVideos.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + VIDEOS_PER_PAGE)}
+                  className="px-6 py-3 bg-card border border-border/50 rounded-xl text-sm font-medium text-foreground hover:border-primary/50 hover:bg-card/80 transition-all duration-300"
+                >
+                  Load More ({filteredAndSortedVideos.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
