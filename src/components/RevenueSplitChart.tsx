@@ -87,7 +87,7 @@ const RevenueSplitChart = () => {
             </div>
             <div className="flex items-center justify-between gap-6">
               <span className="text-muted-foreground text-sm">Bo</span>
-              <span className="font-mono font-medium" style={{ color: "hsl(160, 50%, 60%)" }}>
+              <span className="font-mono font-medium" style={{ color: "hsl(0, 60%, 70%)" }}>
                 {formatCurrency(payload[1]?.value || 0)}
               </span>
             </div>
@@ -151,14 +151,14 @@ const RevenueSplitChart = () => {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={filteredData}>
-                  <defs>
+                    <defs>
                     <linearGradient id="senneGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="hsl(160, 84%, 39%)" />
-                      <stop offset="100%" stopColor="hsl(160, 84%, 50%)" />
+                      <stop offset="0%" stopColor="hsl(0, 100%, 50%)" />
+                      <stop offset="100%" stopColor="hsl(0, 100%, 60%)" />
                     </linearGradient>
                     <linearGradient id="boGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="hsl(160, 50%, 55%)" />
-                      <stop offset="100%" stopColor="hsl(160, 50%, 65%)" />
+                      <stop offset="0%" stopColor="hsl(0, 60%, 65%)" />
+                      <stop offset="100%" stopColor="hsl(0, 60%, 75%)" />
                     </linearGradient>
                   </defs>
                   <XAxis
@@ -189,8 +189,8 @@ const RevenueSplitChart = () => {
                     dot={false}
                     activeDot={{ 
                       r: 5, 
-                      fill: "hsl(160, 84%, 39%)",
-                      stroke: "hsl(160, 84%, 39%)",
+                      fill: "hsl(0, 100%, 50%)",
+                      stroke: "hsl(0, 100%, 50%)",
                       strokeWidth: 2
                     }}
                   />
@@ -203,8 +203,8 @@ const RevenueSplitChart = () => {
                     dot={false}
                     activeDot={{ 
                       r: 5, 
-                      fill: "hsl(160, 50%, 60%)",
-                      stroke: "hsl(160, 50%, 60%)",
+                      fill: "hsl(0, 60%, 70%)",
+                      stroke: "hsl(0, 60%, 70%)",
                       strokeWidth: 2
                     }}
                   />
@@ -224,7 +224,7 @@ const RevenueSplitChart = () => {
               </div>
               <div className="text-center min-w-0">
                 <p className="text-muted-foreground text-[10px] sm:text-xs uppercase tracking-wider mb-1 sm:mb-2">Bo</p>
-                <p className="font-mono text-lg sm:text-2xl font-medium truncate" style={{ color: "hsl(160, 50%, 60%)" }}>
+                <p className="font-mono text-lg sm:text-2xl font-medium truncate" style={{ color: "hsl(0, 60%, 70%)" }}>
                   {formatCurrency(totals.bo)}
                 </p>
               </div>

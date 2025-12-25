@@ -27,10 +27,10 @@ const deviceLabels: Record<string, string> = {
 
 const COLORS = [
   'hsl(var(--primary))',
-  'hsl(142, 76%, 36%)',
-  'hsl(142, 76%, 46%)',
-  'hsl(142, 76%, 56%)',
-  'hsl(142, 76%, 66%)',
+  'hsl(0, 80%, 60%)',
+  'hsl(0, 70%, 70%)',
+  'hsl(0, 60%, 75%)',
+  'hsl(0, 50%, 80%)',
 ];
 
 const formatViews = (views: number): string => {

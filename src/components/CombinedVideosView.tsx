@@ -124,7 +124,7 @@ const VideoCard = ({
         <div className={`absolute top-3 left-3 px-2.5 py-1 backdrop-blur-md rounded-lg flex items-center gap-1.5 ${
           isSenneOnly 
             ? 'bg-orange-500 text-white' 
-            : 'bg-emerald-500 text-white'
+            : 'bg-primary text-primary-foreground'
         }`}>
           <span className="text-[10px] font-semibold tracking-wide">
             {isSenneOnly ? 'Senne' : 'SenBo'}
@@ -144,7 +144,7 @@ const VideoCard = ({
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-center justify-between">
             <span className="text-white/50 text-xs font-medium">{formatViews(video.views)} views</span>
-            <span className="font-mono text-lg font-semibold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{formatRevenue(video.revenue)}</span>
+            <span className="font-mono text-lg font-semibold text-red-300 drop-shadow-[0_0_8px_rgba(252,165,165,0.5)]">{formatRevenue(video.revenue)}</span>
           </div>
         </div>
       </div>
