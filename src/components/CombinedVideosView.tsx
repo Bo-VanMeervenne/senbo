@@ -159,12 +159,14 @@ const VideosSkeleton = () => (
 );
 
 type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
+type SourceFilter = 'all' | 'senbo' | 'senne';
 
 interface CombinedVideosViewProps {
   month: 'last' | 'current';
+  sourceFilter: SourceFilter;
 }
 
-const CombinedVideosView = ({ month }: CombinedVideosViewProps) => {
+const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -186,6 +188,13 @@ const CombinedVideosView = ({ month }: CombinedVideosViewProps) => {
   const filteredAndSortedVideos = useMemo(() => {
     if (!videos) return [];
     let result = [...videos];
+    
+    // Filter by source
+    if (sourceFilter === 'senbo') {
+      result = result.filter(video => video.source === 'senbo');
+    } else if (sourceFilter === 'senne') {
+      result = result.filter(video => video.source === 'senne');
+    }
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -237,22 +246,20 @@ const CombinedVideosView = ({ month }: CombinedVideosViewProps) => {
     }
     
     return result;
-  }, [videos, searchQuery, sortBy]);
+  }, [videos, searchQuery, sortBy, sourceFilter]);
 
   const totalRevenue = useMemo(() => {
-    if (!videos) return 0;
-    return videos.reduce((sum, v) => sum + v.revenue, 0);
-  }, [videos]);
+    return filteredAndSortedVideos.reduce((sum, v) => sum + v.revenue, 0);
+  }, [filteredAndSortedVideos]);
 
   const totalViews = useMemo(() => {
-    if (!videos) return 0;
-    return videos.reduce((sum, v) => sum + v.views, 0);
-  }, [videos]);
+    return filteredAndSortedVideos.reduce((sum, v) => sum + v.views, 0);
+  }, [filteredAndSortedVideos]);
 
   const avgViewsPerVideo = useMemo(() => {
-    if (!videos || videos.length === 0) return 0;
-    return Math.round(totalViews / videos.length);
-  }, [videos, totalViews]);
+    if (filteredAndSortedVideos.length === 0) return 0;
+    return Math.round(totalViews / filteredAndSortedVideos.length);
+  }, [filteredAndSortedVideos, totalViews]);
 
   return (
     <div className="min-h-[calc(100vh-128px)] px-6 py-8">
@@ -262,7 +269,7 @@ const CombinedVideosView = ({ month }: CombinedVideosViewProps) => {
           <div className="flex items-center gap-8">
             <div className="group">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Videos</p>
-              <p className="text-2xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
+              <p className="text-2xl font-light text-foreground tracking-tight">{filteredAndSortedVideos.length}</p>
             </div>
             <div className="w-px h-10 bg-border/30" />
             <div className="group">
