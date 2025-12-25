@@ -86,14 +86,17 @@ serve(async (req) => {
     const parseDate = (value: string): string | null => {
       if (!value) return null;
       
-      // Try standard Date parsing first
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
+      // Remove time portion if present (e.g., "23/12/2025, 1:34" -> "23/12/2025")
+      let dateStr = value.split(',')[0].trim();
+      
+      // Try standard Date parsing first (handles YYYY-MM-DD, etc.)
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime()) && dateStr.includes('-')) {
         return date.toISOString().split('T')[0];
       }
       
-      // Try DD/MM/YYYY or DD-MM-YYYY format
-      const parts = value.split(/[\/\-\.]/);
+      // Try DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY format
+      const parts = dateStr.split(/[\/\-\.]/);
       if (parts.length === 3) {
         const [day, month, year] = parts;
         const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
