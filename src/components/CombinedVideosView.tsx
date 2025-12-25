@@ -233,17 +233,26 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
     };
 
-    // Filter by date range
-    if (dateRange.from && dateRange.to) {
-      const fromDate = new Date(dateRange.from);
-      fromDate.setHours(0, 0, 0, 0);
-      const toDate = new Date(dateRange.to);
-      toDate.setHours(23, 59, 59, 999);
+    // Filter by date range - only apply if user has changed from default
+    if (showAdvanced && dateRange.from && dateRange.to) {
+      const defaultRange = getDefaultDateRange();
+      const isDefaultRange = dateRange.from.getTime() === defaultRange.from.getTime() && 
+                             dateRange.to.getTime() === defaultRange.to.getTime();
       
-      result = result.filter(video => {
-        const videoDate = parseDate(video.publishDate);
-        return videoDate >= fromDate && videoDate <= toDate;
-      });
+      // Only filter if user has explicitly changed the date range
+      if (!isDefaultRange) {
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        
+        result = result.filter(video => {
+          if (!video.publishDate) return true; // Include videos without dates
+          const videoDate = parseDate(video.publishDate);
+          if (videoDate.getTime() === new Date(0).getTime()) return true; // Include invalid dates
+          return videoDate >= fromDate && videoDate <= toDate;
+        });
+      }
     }
 
     const parseDuration = (d: string) => {
