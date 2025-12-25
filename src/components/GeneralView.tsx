@@ -14,13 +14,13 @@ const GeneralView = () => {
       <div className="w-full max-w-4xl space-y-8">
         <DailyRevenueChart />
         
-        {/* Two column layout for Traffic and Device charts */}
+        {/* Device and Subscriber stats side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TrafficSourceChart />
           <DeviceViewsChart />
+          <SubscriberStatsCards />
         </div>
         
-        <SubscriberStatsCards />
+        <TrafficSourceChart />
         
         <CountryRevenueTable />
       </div>

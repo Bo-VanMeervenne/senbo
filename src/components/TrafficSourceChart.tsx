@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TrafficData {
   source: string;
@@ -10,21 +11,27 @@ interface TrafficData {
 
 const sourceLabels: Record<string, string> = {
   'SUGGESTED': 'Suggested Videos',
-  'BROWSE': 'Browse Features',
-  'EXT_URL': 'External URLs',
+  'BROWSE': 'Browse & Home',
+  'EXT_URL': 'External Websites',
   'YT_SEARCH': 'YouTube Search',
-  'YT_OTHER_PAGE': 'Other YT Pages',
+  'YT_OTHER_PAGE': 'Other YouTube Pages',
   'NOTIFICATION': 'Notifications',
   'PLAYLIST': 'Playlists',
   'END_SCREEN': 'End Screens',
   'SHORTS': 'Shorts Feed',
   'CHANNEL': 'Channel Page',
   'SUBSCRIBER': 'Subscription Feed',
-  'NO_LINK_OTHER': 'Other',
+  'NO_LINK_OTHER': 'Direct or Unknown',
   'HASHTAGS': 'Hashtags',
   'VIDEO_REMIXES': 'Remixes',
   'LIVE_REDIRECT': 'Live Redirect',
   'PRODUCT_PAGES': 'Product Pages',
+  'ADVERTISING': 'YouTube Ads',
+  'CAMPAIGN_CARD': 'Campaign Cards',
+  'NO_LINK_EMBEDDED': 'Embedded Players',
+  'RELATED_VIDEO': 'Related Videos',
+  'ANNOTATION': 'Annotations',
+  'SUBSCRIBER_NOTIFICATIONS': 'Sub Notifications',
 };
 
 const formatViews = (views: number): string => {
@@ -38,6 +45,8 @@ const formatViews = (views: number): string => {
 };
 
 const TrafficSourceChart = () => {
+  const [showAll, setShowAll] = useState(false);
+  
   const { data, isLoading, error } = useQuery({
     queryKey: ['traffic-source'],
     queryFn: async () => {
@@ -65,6 +74,8 @@ const TrafficSourceChart = () => {
   }
 
   const maxViews = Math.max(...data.map(d => d.views));
+  const displayData = showAll ? data : data.slice(0, 5);
+  const hasMore = data.length > 5;
 
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
@@ -74,9 +85,9 @@ const TrafficSourceChart = () => {
       </h3>
       
       <div className="space-y-3">
-        {data.map((item, index) => {
+        {displayData.map((item, index) => {
           const widthPercent = (item.views / maxViews) * 100;
-          const label = sourceLabels[item.source] || item.source;
+          const label = sourceLabels[item.source] || item.source.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
           
           return (
             <div key={item.source} className="group">
@@ -100,6 +111,23 @@ const TrafficSourceChart = () => {
           );
         })}
       </div>
+      
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+        >
+          {showAll ? (
+            <>
+              Show less <ChevronUp className="w-4 h-4" />
+            </>
+          ) : (
+            <>
+              View all {data.length} sources <ChevronDown className="w-4 h-4" />
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 };
