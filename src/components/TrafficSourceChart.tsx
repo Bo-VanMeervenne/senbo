@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, ChevronRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TrafficData {
   source: string;
@@ -44,9 +52,47 @@ const formatViews = (views: number): string => {
   return views.toLocaleString();
 };
 
-const TrafficSourceChart = () => {
-  const [showAll, setShowAll] = useState(false);
+interface TrafficBarsProps {
+  data: TrafficData[];
+  maxViews: number;
+  showAll?: boolean;
+}
+
+const TrafficBars = ({ data, maxViews, showAll = false }: TrafficBarsProps) => {
+  const displayData = showAll ? data : data.slice(0, 5);
   
+  return (
+    <div className="space-y-3">
+      {displayData.map((item, index) => {
+        const widthPercent = (item.views / maxViews) * 100;
+        const label = sourceLabels[item.source] || item.source.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+        
+        return (
+          <div key={item.source} className="group">
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+                {label}
+              </span>
+              <span className="text-foreground font-medium">
+                {formatViews(item.views)}
+              </span>
+            </div>
+            <div className="h-6 bg-secondary/30 rounded-lg overflow-hidden">
+              <div 
+                className={`h-full rounded-lg transition-all duration-500 ${
+                  index === 0 ? 'bg-primary' : 'bg-primary/60'
+                }`}
+                style={{ width: `${widthPercent}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const TrafficSourceChart = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['traffic-source'],
     queryFn: async () => {
@@ -74,7 +120,6 @@ const TrafficSourceChart = () => {
   }
 
   const maxViews = Math.max(...data.map(d => d.views));
-  const displayData = showAll ? data : data.slice(0, 5);
   const hasMore = data.length > 5;
 
   return (
@@ -84,49 +129,29 @@ const TrafficSourceChart = () => {
         Traffic Sources
       </h3>
       
-      <div className="space-y-3">
-        {displayData.map((item, index) => {
-          const widthPercent = (item.views / maxViews) * 100;
-          const label = sourceLabels[item.source] || item.source.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-          
-          return (
-            <div key={item.source} className="group">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-                  {label}
-                </span>
-                <span className="text-foreground font-medium">
-                  {formatViews(item.views)}
-                </span>
-              </div>
-              <div className="h-6 bg-secondary/30 rounded-lg overflow-hidden">
-                <div 
-                  className={`h-full rounded-lg transition-all duration-500 ${
-                    index === 0 ? 'bg-primary' : 'bg-primary/60'
-                  }`}
-                  style={{ width: `${widthPercent}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <TrafficBars data={data} maxViews={maxViews} />
       
       {hasMore && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-        >
-          {showAll ? (
-            <>
-              Show less <ChevronUp className="w-4 h-4" />
-            </>
-          ) : (
-            <>
-              View all {data.length} sources <ChevronDown className="w-4 h-4" />
-            </>
-          )}
-        </button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2 rounded-lg hover:bg-secondary/20">
+              View all {data.length} sources <ChevronRight className="w-4 h-4" />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Traffic Sources
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="pr-4">
+                <TrafficBars data={data} maxViews={maxViews} showAll />
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
