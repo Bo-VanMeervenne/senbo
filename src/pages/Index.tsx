@@ -90,24 +90,30 @@ const Index = () => {
         {/* Month sub-tabs - only show for revenue, videos, and senne */}
         {activeTab !== 'general' && (
           <div className="flex justify-center mt-3">
-            <div className="flex items-center gap-0.5">
+            <div className="relative flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
+              {/* Sliding background */}
+              <div 
+                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-card rounded-full shadow-sm transition-all duration-300 ease-out ${
+                  monthTab === 'current' ? 'left-1' : 'left-[calc(50%+2px)]'
+                }`}
+              />
+              
               <button
                 onClick={() => setMonthTab('current')}
-                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
                   monthTab === 'current' 
                     ? 'text-foreground' 
-                    : 'text-muted-foreground/50 hover:text-muted-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Current Month
               </button>
-              <span className="text-muted-foreground/30 text-xs">|</span>
               <button
                 onClick={() => setMonthTab('last')}
-                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
                   monthTab === 'last' 
                     ? 'text-foreground' 
-                    : 'text-muted-foreground/50 hover:text-muted-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Last Month
