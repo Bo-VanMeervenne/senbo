@@ -102,13 +102,13 @@ const VideoCard = ({
         </div>
         
         {/* Source badge */}
-        <div className={`absolute top-3 left-3 px-2 py-1 backdrop-blur-md rounded-lg flex items-center gap-1.5 border ${
+        <div className={`absolute top-3 left-3 px-2.5 py-1 backdrop-blur-md rounded-lg flex items-center gap-1.5 ${
           isSenneOnly 
-            ? 'bg-orange-500/20 border-orange-500/30' 
-            : 'bg-primary/20 border-primary/30'
+            ? 'bg-orange-500 text-white' 
+            : 'bg-emerald-500 text-white'
         }`}>
-          <span className={`text-[10px] font-medium tracking-wide ${isSenneOnly ? 'text-orange-300' : 'text-primary-foreground/80'}`}>
-            {isSenneOnly ? 'Senne' : 'S&B'}
+          <span className="text-[10px] font-semibold tracking-wide">
+            {isSenneOnly ? 'Senne' : 'SenBo'}
           </span>
         </div>
 
