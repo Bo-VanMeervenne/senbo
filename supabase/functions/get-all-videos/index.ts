@@ -122,7 +122,7 @@ serve(async (req) => {
         source: 'senbo' as const,
       }));
 
-    // Parse Senne Only videos (gross revenue is column D index 3)
+    // Parse Senne Only videos (Revenue After Tax is column F index 5)
     const senneVideos = (senneData.values || [])
       .filter((row: string[]) => row[0] && row[1])
       .map((row: string[]) => ({
@@ -130,7 +130,7 @@ serve(async (req) => {
         url: row[1] || '',
         videoId: extractVideoId(row[1] || '', row[6]),
         views: parseViews(row[2] || '0'),
-        revenue: parseAmount(row[3] || '0'), // Revenue (matches Summary + Revenue Split)
+        revenue: parseAmount(row[5] || '0'), // Revenue After Tax (column F)
         publishDate: row[7] || '',
         minutesWatched: parseViews(row[8] || '0'),
         avgDuration: row[9] || '',
