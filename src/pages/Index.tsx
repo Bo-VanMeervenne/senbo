@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import VideosView from "@/components/VideosView";
+import SenneVideosView from "@/components/SenneVideosView";
 import GeneralView from "@/components/GeneralView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'general' | 'revenue' | 'videos';
+type Tab = 'general' | 'revenue' | 'videos' | 'senne';
 type MonthTab = 'last' | 'current';
 
 const Index = () => {
@@ -61,10 +60,20 @@ const Index = () => {
             >
               SENBO
             </button>
+            <button
+              onClick={() => setActiveTab('senne')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                activeTab === 'senne' 
+                  ? 'bg-orange-500 text-white' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Senne Only
+            </button>
           </div>
         </div>
 
-        {/* Month sub-tabs - only show for revenue and videos */}
+        {/* Month sub-tabs - only show for revenue, videos, and senne */}
         {activeTab !== 'general' && (
           <div className="flex justify-center mt-3">
             <div className="flex items-center gap-1 p-0.5 bg-secondary/50 backdrop-blur-xl rounded-lg border border-border/30">
@@ -99,8 +108,10 @@ const Index = () => {
           <GeneralView />
         ) : activeTab === 'revenue' ? (
           <RevenueDashboard month={monthTab} />
-        ) : (
+        ) : activeTab === 'videos' ? (
           <VideosView month={monthTab} />
+        ) : (
+          <SenneVideosView month={monthTab} />
         )}
       </div>
     </div>
