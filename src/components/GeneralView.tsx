@@ -23,7 +23,7 @@ const getDaysUntilPayday = () => {
   const currentDay = today.getDate();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
-  
+
   let payday: Date;
   if (currentDay >= 22) {
     // Next payday is 22nd of next month
@@ -32,7 +32,7 @@ const getDaysUntilPayday = () => {
     // Next payday is 22nd of this month
     payday = new Date(currentYear, currentMonth, 22);
   }
-  
+
   const diffTime = payday.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
@@ -62,12 +62,8 @@ const GeneralView = () => {
   return (
     <div className="min-h-[calc(100vh-128px)] flex flex-col items-center px-6 py-12">
       {/* Welcome Header */}
-      <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2 animate-fade-in">
-        welcome
-      </h1>
-      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">
-        Overall Performance
-      </p>
+      <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2 animate-fade-in">Welcome</h1>
+      <p className="text-muted-foreground text-xs uppercase tracking-[0.2em] mb-8">Overall Performance</p>
 
       {/* Real Stats */}
       <div className="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in" style={{ animationDelay: "0.1s" }}>
@@ -79,16 +75,16 @@ const GeneralView = () => {
           </span>
         </div>
       </div>
-      
+
       <div className="w-full max-w-4xl space-y-6">
         <DailyRevenueChart />
-        
+
         <CountryRevenueTable />
-        
+
         <TrafficSourceChart />
-        
+
         <SubscriberStatsCards />
-        
+
         <DeviceViewsChart />
       </div>
     </div>
