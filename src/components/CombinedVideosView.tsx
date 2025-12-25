@@ -333,7 +333,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
           <div className="flex items-center gap-4 md:gap-8 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
             <div className="group flex-shrink-0">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Videos</p>
-              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{filteredAndSortedVideos.length}</p>
+              <p className="text-xl md:text-2xl font-medium text-foreground tracking-tight">{filteredAndSortedVideos.length}</p>
             </div>
             <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
             <div className="group flex-shrink-0">
@@ -346,7 +346,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                   <TooltipContent side="bottom" className="text-xs">24-48h delay</TooltipContent>
                 </Tooltip>
               </div>
-              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
+              <p className="text-xl md:text-2xl font-medium text-foreground tracking-tight">{formatViews(totalViews)}</p>
             </div>
             <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
             <div className="group flex-shrink-0">
@@ -372,7 +372,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                 <TrendingUp className="w-3 h-3" />
                 Avg Views
               </p>
-              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
+              <p className="text-xl md:text-2xl font-medium text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
             </div>
           </div>
           
