@@ -14,13 +14,13 @@ const GeneralView = () => {
       <div className="w-full max-w-4xl space-y-6">
         <DailyRevenueChart />
         
-        <DeviceViewsChart />
-        
         <SubscriberStatsCards />
         
         <CountryRevenueTable />
         
         <TrafficSourceChart />
+        
+        <DeviceViewsChart />
       </div>
     </div>
   );
