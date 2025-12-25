@@ -35,7 +35,7 @@ serve(async (req) => {
     // Fetch videos from the Senne Only sheets
     // Columns: A=Title, B=Link, C=Views, D=Revenue, E=Tax, F=Revenue After Tax, G=Video ID, H=Publish Date, I=Minutes Watched, J=Avg Duration, K=Likes, L=Shares, M=Subs Gained, N=Thumbnail
     const sheetName = month === 'current' ? 'Senne Only Videos (Current Month)' : 'Senne Only Videos (Last Month)';
-    const videosRange = encodeURIComponent(`${sheetName}!A2:N100`);
+    const videosRange = encodeURIComponent(`${sheetName}!A2:N500`);
     const videosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${videosRange}?key=${apiKey}`;
     
     console.log(`Fetching Senne Only videos from sheet: ${sheetName}`);
