@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar as CalendarLucide, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp, Info } from "lucide-react";
+import { Search, Coins, Calendar as CalendarLucide, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp, Info, Zap } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -73,11 +73,15 @@ const formatShortDate = (dateStr: string): string => {
 const VideoCard = ({ 
   video, 
   index,
-  onStatsClick 
+  onStatsClick,
+  isOutlier,
+  outlierMultiplier
 }: { 
   video: Video; 
   index: number;
   onStatsClick: (video: Video) => void;
+  isOutlier?: boolean;
+  outlierMultiplier?: number;
 }) => {
   const thumbnailUrl = video.thumbnailUrl || 
     (video.videoId ? `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg` : null);
@@ -130,6 +134,14 @@ const VideoCard = ({
             {isSenneOnly ? 'Senne' : 'SenBo'}
           </span>
         </div>
+
+        {/* Outlier badge */}
+        {isOutlier && outlierMultiplier && (
+          <div className="absolute top-12 left-3 px-2 py-1 bg-yellow-500 text-black backdrop-blur-md rounded-lg flex items-center gap-1">
+            <Zap className="w-3 h-3" />
+            <span className="text-[10px] font-bold">{outlierMultiplier.toFixed(1)}x</span>
+          </div>
+        )}
 
         {/* Date badge */}
         {shortDate && (
@@ -189,6 +201,8 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(VIDEOS_PER_PAGE);
+  const [showOutliers, setShowOutliers] = useState(false);
+  const [outlierThreshold, setOutlierThreshold] = useState(2);
 
   // Date range based on month tab
   const getDefaultDateRange = (): DateRange => {
@@ -327,6 +341,42 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
     if (filteredAndSortedVideos.length === 0) return 0;
     return Math.round(totalViews / filteredAndSortedVideos.length);
   }, [filteredAndSortedVideos, totalViews]);
+
+  // Calculate outlier status for each video based on surrounding 5 before and 5 after
+  const outlierData = useMemo(() => {
+    const outliers = new Map<string, number>();
+    
+    // We need chronologically sorted videos for this calculation
+    const parseDate = (d: string) => {
+      if (!d) return new Date(0);
+      const [datePart, timePart] = d.split(', ');
+      const [day, month, year] = datePart.split('/');
+      const [hour, min] = (timePart || '00:00').split(':');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
+    };
+    
+    const chronologicalVideos = [...filteredAndSortedVideos].sort(
+      (a, b) => parseDate(a.publishDate).getTime() - parseDate(b.publishDate).getTime()
+    );
+    
+    chronologicalVideos.forEach((video, index) => {
+      // Get 5 before and 5 after
+      const start = Math.max(0, index - 5);
+      const end = Math.min(chronologicalVideos.length, index + 6);
+      const surrounding = chronologicalVideos.slice(start, end).filter((_, i) => start + i !== index);
+      
+      if (surrounding.length === 0) return;
+      
+      const avgSurrounding = surrounding.reduce((sum, v) => sum + v.views, 0) / surrounding.length;
+      
+      if (avgSurrounding > 0 && video.views >= avgSurrounding * outlierThreshold) {
+        const multiplier = video.views / avgSurrounding;
+        outliers.set(video.videoId || video.title, multiplier);
+      }
+    });
+    
+    return outliers;
+  }, [filteredAndSortedVideos, outlierThreshold]);
 
   return (
     <div className="min-h-[calc(100vh-128px)] px-4 md:px-6 py-6 md:py-8">
@@ -488,6 +538,36 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                 />
               </PopoverContent>
             </Popover>
+
+            <div className="w-px h-6 bg-border/30 mx-1" />
+
+            {/* Outlier Toggle */}
+            <button
+              onClick={() => setShowOutliers(!showOutliers)}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all duration-300 ${
+                showOutliers
+                  ? 'bg-yellow-500 text-black border-yellow-500'
+                  : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-yellow-500/50'
+              }`}
+            >
+              <Zap className="w-3 h-3" />
+              Outliers
+            </button>
+
+            {/* Outlier Threshold Input */}
+            {showOutliers && (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={outlierThreshold}
+                  onChange={(e) => setOutlierThreshold(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                  className="w-14 px-2 py-2 text-xs text-center bg-transparent border border-border/50 rounded-lg text-foreground focus:outline-none focus:border-yellow-500/50 transition-all"
+                />
+                <span className="text-xs text-muted-foreground">x avg</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -501,14 +581,22 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-              {filteredAndSortedVideos.slice(0, visibleCount).map((video, index) => (
-                <VideoCard 
-                  key={video.videoId || index} 
-                  video={video} 
-                  index={index}
-                  onStatsClick={handleStatsClick}
-                />
-              ))}
+              {filteredAndSortedVideos.slice(0, visibleCount).map((video, index) => {
+                const videoKey = video.videoId || video.title;
+                const multiplier = outlierData.get(videoKey);
+                const isOutlier = showOutliers && multiplier !== undefined;
+                
+                return (
+                  <VideoCard 
+                    key={video.videoId || index} 
+                    video={video} 
+                    index={index}
+                    onStatsClick={handleStatsClick}
+                    isOutlier={isOutlier}
+                    outlierMultiplier={multiplier}
+                  />
+                );
+              })}
             </div>
             
             {/* Load More Button */}
