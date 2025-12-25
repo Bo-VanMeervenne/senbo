@@ -68,17 +68,12 @@ const Index = () => {
         {activeTab !== 'general' && (
           <div className="flex justify-center mt-3 gap-3">
             {/* Month toggle */}
-            <div className="relative flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
-              <div 
-                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-card rounded-full shadow-sm transition-all duration-300 ease-out ${
-                  monthTab === 'current' ? 'left-1' : 'left-[calc(50%+2px)]'
-                }`}
-              />
+            <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
               <button
                 onClick={() => setMonthTab('current')}
-                className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                   monthTab === 'current' 
-                    ? 'text-foreground' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -86,9 +81,9 @@ const Index = () => {
               </button>
               <button
                 onClick={() => setMonthTab('last')}
-                className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                   monthTab === 'last' 
-                    ? 'text-foreground' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -103,7 +98,7 @@ const Index = () => {
                   onClick={() => setSourceFilter('all')}
                   className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'all' 
-                      ? 'bg-card text-foreground shadow-sm' 
+                      ? 'bg-foreground text-background shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -113,7 +108,7 @@ const Index = () => {
                   onClick={() => setSourceFilter('senbo')}
                   className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'senbo' 
-                      ? 'bg-card text-foreground shadow-sm' 
+                      ? 'bg-transparent text-primary border border-primary shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -123,7 +118,7 @@ const Index = () => {
                   onClick={() => setSourceFilter('senne')}
                   className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                     sourceFilter === 'senne' 
-                      ? 'bg-orange-500 text-white shadow-sm' 
+                      ? 'bg-transparent text-orange-500 border border-orange-500 shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
