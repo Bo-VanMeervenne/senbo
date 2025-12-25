@@ -483,14 +483,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                     }
                   }}
                   numberOfMonths={1}
-                  disabled={(date) => {
-                    const defaultRange = getDefaultDateRange();
-                    const fromDate = new Date(defaultRange.from);
-                    fromDate.setHours(0, 0, 0, 0);
-                    const toDate = new Date(defaultRange.to);
-                    toDate.setHours(23, 59, 59, 999);
-                    return date < fromDate || date > toDate;
-                  }}
+                  disabled={(date) => date > new Date()}
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
