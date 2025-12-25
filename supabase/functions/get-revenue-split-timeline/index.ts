@@ -82,28 +82,36 @@ serve(async (req) => {
       return parseFloat(cleaned) || 0;
     };
 
-    // Parse date helper - returns YYYY-MM-DD format
+    const pad2 = (n: number) => String(n).padStart(2, '0');
+
+    // Parse date helper - returns YYYY-MM-DD format (timezone-safe)
     const parseDate = (value: string): string | null => {
       if (!value) return null;
-      
+
       // Remove time portion if present (e.g., "23/12/2025, 1:34" -> "23/12/2025")
-      let dateStr = value.split(',')[0].trim();
-      
-      // Try standard Date parsing first (handles YYYY-MM-DD, etc.)
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime()) && dateStr.includes('-')) {
-        return date.toISOString().split('T')[0];
-      }
-      
-      // Try DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY format
+      const dateStr = value.split(',')[0].trim();
+
+      // If already ISO-like (YYYY-MM-DD), keep it (timezone-safe)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+      // Try DD/MM/YYYY (or DD-MM-YYYY, DD.MM.YYYY)
       const parts = dateStr.split(/[\/\-\.]/);
       if (parts.length === 3) {
-        const [day, month, year] = parts;
-        const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (!isNaN(parsed.getTime())) {
-          return parsed.toISOString().split('T')[0];
+        const [dayStr, monthStr, yearStr] = parts;
+        const day = parseInt(dayStr, 10);
+        const month = parseInt(monthStr, 10);
+        const year = parseInt(yearStr, 10);
+        if (!Number.isNaN(day) && !Number.isNaN(month) && !Number.isNaN(year)) {
+          return `${year}-${pad2(month)}-${pad2(day)}`;
         }
       }
+
+      // Fallback: attempt Date parse but format using local date parts to avoid off-by-one
+      const d = new Date(dateStr);
+      if (!Number.isNaN(d.getTime())) {
+        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      }
+
       return null;
     };
 
