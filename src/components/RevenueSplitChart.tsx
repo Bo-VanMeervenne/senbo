@@ -12,9 +12,8 @@ import {
 
 interface TimelineEntry {
   date: string;
-  senneRevenue: number | null;
+  senneRevenue: number;
   boRevenue: number;
-  totalRevenue?: number | null;
 }
 
 type TimeFilter = "7" | "30" | "60";
@@ -51,12 +50,10 @@ const RevenueSplitChart = () => {
   // Calculate totals for the selected period
   const totals = filteredData.reduce(
     (acc, entry) => ({
-      senne: acc.senne + (entry.senneRevenue ?? 0),
+      senne: acc.senne + entry.senneRevenue,
       bo: acc.bo + entry.boRevenue,
-      // Track how many points have missing Total Revenue (useful for delayed days)
-      missingSennePoints: acc.missingSennePoints + (entry.senneRevenue === null ? 1 : 0),
     }),
-    { senne: 0, bo: 0, missingSennePoints: 0 }
+    { senne: 0, bo: 0 }
   );
 
   const formatCurrency = (value: number) =>
@@ -74,9 +71,6 @@ const RevenueSplitChart = () => {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const senneVal = payload.find((p: any) => p.dataKey === "senneRevenue")?.value;
-      const boVal = payload.find((p: any) => p.dataKey === "boRevenue")?.value;
-
       return (
         <div className="bg-card border border-border/50 rounded-xl p-4 shadow-xl backdrop-blur-sm">
           <p className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
@@ -86,13 +80,13 @@ const RevenueSplitChart = () => {
             <div className="flex items-center justify-between gap-6">
               <span className="text-muted-foreground text-sm">Senne</span>
               <span className="font-mono text-primary font-medium">
-                {senneVal == null ? "—" : formatCurrency(senneVal)}
+                {formatCurrency(payload[0]?.value || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-6">
               <span className="text-muted-foreground text-sm">Bo</span>
-              <span className="font-mono font-medium" style={{ color: "hsl(200, 80%, 55%)" }}>
-                {formatCurrency(boVal || 0)}
+              <span className="font-mono font-medium" style={{ color: "hsl(140, 70%, 45%)" }}>
+                {formatCurrency(payload[1]?.value || 0)}
               </span>
             </div>
           </div>
@@ -151,8 +145,8 @@ const RevenueSplitChart = () => {
                       <stop offset="100%" stopColor="hsl(160, 84%, 50%)" />
                     </linearGradient>
                     <linearGradient id="boGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="hsl(200, 80%, 50%)" />
-                      <stop offset="100%" stopColor="hsl(200, 80%, 60%)" />
+                      <stop offset="0%" stopColor="hsl(140, 70%, 40%)" />
+                      <stop offset="100%" stopColor="hsl(140, 70%, 50%)" />
                     </linearGradient>
                   </defs>
                   <XAxis
@@ -181,7 +175,6 @@ const RevenueSplitChart = () => {
                     stroke="url(#senneGradient)"
                     strokeWidth={2.5}
                     dot={false}
-                    connectNulls={false}
                     activeDot={{ 
                       r: 5, 
                       fill: "hsl(160, 84%, 39%)",
@@ -198,8 +191,8 @@ const RevenueSplitChart = () => {
                     dot={false}
                     activeDot={{ 
                       r: 5, 
-                      fill: "hsl(200, 80%, 55%)",
-                      stroke: "hsl(200, 80%, 55%)",
+                      fill: "hsl(140, 70%, 45%)",
+                      stroke: "hsl(140, 70%, 45%)",
                       strokeWidth: 2
                     }}
                   />
@@ -219,7 +212,7 @@ const RevenueSplitChart = () => {
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Bo</p>
-                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(200, 80%, 55%)" }}>
+                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(140, 70%, 45%)" }}>
                   {formatCurrency(totals.bo)}
                 </p>
               </div>
