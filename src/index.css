@@ -43,9 +43,15 @@
     @apply border-border;
   }
 
+  html {
+    @apply bg-background;
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Outfit', sans-serif;
+    min-height: 100%;
   }
 }
 
