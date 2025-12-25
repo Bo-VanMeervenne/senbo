@@ -51,36 +51,43 @@ const Index = () => {
             >
               Revenue Split
             </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'videos' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Senne & Bo
-            </button>
-            <button
-              onClick={() => setActiveTab('senne')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'senne' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Senne Only
-            </button>
-            <button
-              onClick={() => setActiveTab('both')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'both' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Both
-            </button>
+            
+            {/* Separator */}
+            <div className="w-px h-5 bg-border/50 mx-1" />
+            
+            {/* Videos group */}
+            <div className="flex items-center gap-0.5 px-1 py-0.5 bg-secondary/30 rounded-full">
+              <button
+                onClick={() => setActiveTab('videos')}
+                className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'videos' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                S&B
+              </button>
+              <button
+                onClick={() => setActiveTab('senne')}
+                className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'senne' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Senne
+              </button>
+              <button
+                onClick={() => setActiveTab('both')}
+                className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'both' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                All
+              </button>
+            </div>
           </div>
         </div>
 
