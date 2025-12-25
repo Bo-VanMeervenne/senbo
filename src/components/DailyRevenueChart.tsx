@@ -10,9 +10,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format, parseISO, getDay } from "date-fns";
-import { TrendingUp, DollarSign, Eye, Calendar, Info } from "lucide-react";
+import { format, parseISO, getDay, startOfMonth, endOfMonth, isSameMonth, subMonths } from "date-fns";
+import { TrendingUp, DollarSign, Eye, Calendar, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface DailyData {
   date: string;
@@ -20,7 +26,7 @@ interface DailyData {
   views: number;
 }
 
-type FilterPreset = '7d' | '30d' | '90d' | '1y' | 'all';
+type FilterPreset = '7d' | '30d' | '90d' | '1y' | 'all' | 'month';
 type MetricType = 'revenue' | 'views';
 
 const filterLabels: Record<FilterPreset, string> = {
@@ -29,6 +35,7 @@ const filterLabels: Record<FilterPreset, string> = {
   '90d': '90D',
   '1y': '1Y',
   'all': 'All',
+  'month': 'Month',
 };
 
 const fetchDailyRevenue = async (): Promise<DailyData[]> => {
@@ -122,7 +129,7 @@ const WeekdayWidget = ({ weekdayStats }: WeekdayWidgetProps) => {
 const DailyRevenueChart = () => {
   const [filter, setFilter] = useState<FilterPreset>('7d');
   const [metric, setMetric] = useState<MetricType>('revenue');
-  
+  const [selectedMonth, setSelectedMonth] = useState<Date>(subMonths(new Date(), 1)); // Default to last month
   const { data: rawData, isLoading, isError } = useQuery({
     queryKey: ['daily-revenue'],
     queryFn: fetchDailyRevenue,
@@ -139,9 +146,19 @@ const DailyRevenueChart = () => {
     }));
   }, [rawData]);
 
-  // Filter based on number of data points, not calendar days
+  // Filter based on number of data points or selected month
   const filteredData = useMemo(() => {
     if (!data.length) return [];
+    
+    // Handle month filter separately
+    if (filter === 'month') {
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
+      return data.filter((d) => {
+        const date = parseISO(d.date);
+        return date >= monthStart && date <= monthEnd;
+      });
+    }
     
     let count: number;
     switch (filter) {
@@ -164,7 +181,7 @@ const DailyRevenueChart = () => {
     
     // Take the last N entries from the sorted data
     return data.slice(-count);
-  }, [data, filter]);
+  }, [data, filter, selectedMonth]);
 
   const stats = useMemo(() => {
     if (!filteredData.length) return { totalRevenue: 0, totalViews: 0, avgRevenue: 0, avgViews: 0 };
@@ -330,7 +347,7 @@ const DailyRevenueChart = () => {
               
               {/* Time filter */}
               <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 flex-shrink-0">
-                {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
+                {(Object.keys(filterLabels) as FilterPreset[]).filter(key => key !== 'month').map((key) => (
                   <button
                     key={key}
                     onClick={() => setFilter(key)}
@@ -343,6 +360,84 @@ const DailyRevenueChart = () => {
                     {filterLabels[key]}
                   </button>
                 ))}
+                
+                {/* Month selector */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={`px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1 ${
+                        filter === 'month'
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span className="hidden sm:inline">
+                        {filter === 'month' ? format(selectedMonth, 'MMM yyyy') : 'Month'}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3" align="end">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setSelectedMonth(prev => subMonths(prev, 1))}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm font-medium">
+                          {format(selectedMonth, 'MMMM yyyy')}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setSelectedMonth(prev => {
+                            const next = new Date(prev);
+                            next.setMonth(next.getMonth() + 1);
+                            // Don't go past current month
+                            return next > new Date() ? prev : next;
+                          })}
+                          disabled={isSameMonth(selectedMonth, new Date())}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Quick month selection */}
+                      <div className="grid grid-cols-3 gap-1">
+                        {Array.from({ length: 6 }, (_, i) => {
+                          const month = subMonths(new Date(), i);
+                          return (
+                            <Button
+                              key={i}
+                              variant={isSameMonth(month, selectedMonth) ? "default" : "ghost"}
+                              size="sm"
+                              className="text-xs h-7"
+                              onClick={() => {
+                                setSelectedMonth(month);
+                                setFilter('month');
+                              }}
+                            >
+                              {format(month, 'MMM')}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setFilter('month')}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
