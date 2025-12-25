@@ -85,7 +85,7 @@ const RevenueSplitChart = () => {
             </div>
             <div className="flex items-center justify-between gap-6">
               <span className="text-muted-foreground text-sm">Bo</span>
-              <span className="font-mono text-foreground/70 font-medium">
+              <span className="font-mono font-medium" style={{ color: "hsl(200, 80%, 55%)" }}>
                 {formatCurrency(payload[1]?.value || 0)}
               </span>
             </div>
@@ -145,8 +145,8 @@ const RevenueSplitChart = () => {
                       <stop offset="100%" stopColor="hsl(160, 84%, 50%)" />
                     </linearGradient>
                     <linearGradient id="boGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="hsl(0, 0%, 40%)" />
-                      <stop offset="100%" stopColor="hsl(0, 0%, 55%)" />
+                      <stop offset="0%" stopColor="hsl(200, 80%, 50%)" />
+                      <stop offset="100%" stopColor="hsl(200, 80%, 60%)" />
                     </linearGradient>
                   </defs>
                   <XAxis
@@ -191,8 +191,8 @@ const RevenueSplitChart = () => {
                     dot={false}
                     activeDot={{ 
                       r: 5, 
-                      fill: "hsl(0, 0%, 50%)",
-                      stroke: "hsl(0, 0%, 50%)",
+                      fill: "hsl(200, 80%, 55%)",
+                      stroke: "hsl(200, 80%, 55%)",
                       strokeWidth: 2
                     }}
                   />
@@ -212,7 +212,7 @@ const RevenueSplitChart = () => {
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Bo</p>
-                <p className="font-mono text-2xl text-foreground/70 font-medium">
+                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(200, 80%, 55%)" }}>
                   {formatCurrency(totals.bo)}
                 </p>
               </div>
