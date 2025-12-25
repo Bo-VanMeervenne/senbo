@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import senneImage from "@/assets/senne-jackson.jpg";
 import bowieImage from "@/assets/bowie.jpg";
-
+import RevenueSplitChart from "./RevenueSplitChart";
 const useCountUp = (
   end: number, 
   duration: number = 2000, 
@@ -177,6 +177,9 @@ const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Revenue Split Timeline Chart */}
+      <RevenueSplitChart />
     </div>
   );
 };
