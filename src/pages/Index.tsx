@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import VideosView from "@/components/VideosView";
 import SenneVideosView from "@/components/SenneVideosView";
+import CombinedVideosView from "@/components/CombinedVideosView";
 import GeneralView from "@/components/GeneralView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'general' | 'revenue' | 'videos' | 'senne';
+type Tab = 'general' | 'revenue' | 'videos' | 'senne' | 'both';
 type MonthTab = 'last' | 'current';
 
 const Index = () => {
@@ -70,6 +71,16 @@ const Index = () => {
             >
               Senne Only
             </button>
+            <button
+              onClick={() => setActiveTab('both')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                activeTab === 'both' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Both
+            </button>
           </div>
         </div>
 
@@ -111,8 +122,10 @@ const Index = () => {
           <RevenueDashboard month={monthTab} />
         ) : activeTab === 'videos' ? (
           <VideosView month={monthTab} />
-        ) : (
+        ) : activeTab === 'senne' ? (
           <SenneVideosView month={monthTab} />
+        ) : (
+          <CombinedVideosView month={monthTab} />
         )}
       </div>
     </div>
