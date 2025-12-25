@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar as CalendarIcon, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp, Info } from "lucide-react";
+import { Search, Coins, Calendar as CalendarLucide, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp, Info } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -120,7 +120,7 @@ const VideoCard = ({
         {/* Date badge */}
         {shortDate && (
           <div className="absolute top-3 right-3 px-2 py-1 bg-black/40 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10">
-            <Calendar className="w-3 h-3 text-white/60" />
+            <CalendarLucide className="w-3 h-3 text-white/60" />
             <span className="text-white/80 text-[10px] font-medium tracking-wide">{shortDate}</span>
           </div>
         )}
@@ -298,8 +298,8 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
             </div>
             <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
             <div className="group flex-shrink-0">
-              <div className="flex items-center gap-1">
-                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Views</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] group-hover:text-muted-foreground transition-colors">Total Views</p>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="w-2.5 h-2.5 text-muted-foreground/40 cursor-help" />
@@ -311,8 +311,8 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
             </div>
             <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
             <div className="group flex-shrink-0">
-              <div className="flex items-center gap-1">
-                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] group-hover:text-muted-foreground transition-colors">Total Revenue</p>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="w-2.5 h-2.5 text-muted-foreground/40 cursor-help" />
@@ -347,7 +347,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                   : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
-              <CalendarIcon className="w-4 h-4" />
+              <CalendarLucide className="w-4 h-4" />
               <span className="hidden sm:inline">{sortBy === 'oldest' ? 'Oldest' : 'Newest'}</span>
             </button>
             
@@ -421,7 +421,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
                 <button
                   className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300"
                 >
-                  <CalendarIcon className="w-3 h-3" />
+                  <CalendarLucide className="w-3 h-3" />
                   {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
                 </button>
               </PopoverTrigger>
