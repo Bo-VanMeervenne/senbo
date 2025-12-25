@@ -86,26 +86,28 @@ const VideoStatsDialog = ({ video, open, onOpenChange }: VideoStatsDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle className="text-lg leading-tight pr-6">{video.title}</DialogTitle>
         </DialogHeader>
 
-        {/* Thumbnail */}
-        <div className="relative aspect-[9/16] w-full max-w-[200px] mx-auto rounded-xl overflow-hidden bg-secondary">
-          {thumbnailUrl && (
-            <img 
-              src={thumbnailUrl}
-              alt={video.title}
-              className="w-full h-full object-cover"
-            />
-          )}
-          {/* Date badge */}
-          <div className="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg">
-            <p className="text-white text-xs font-medium">{date}</p>
-            {time && <p className="text-white/70 text-[10px]">{time}</p>}
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
+          {/* Thumbnail */}
+          <div className="relative aspect-[9/16] w-full max-w-[200px] mx-auto rounded-xl overflow-hidden bg-secondary flex-shrink-0">
+            {thumbnailUrl && (
+              <img 
+                src={thumbnailUrl}
+                alt={video.title}
+                className="w-full h-full object-cover"
+              />
+            )}
+            {/* Date badge */}
+            <div className="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg">
+              <p className="text-white text-xs font-medium">{date}</p>
+              {time && <p className="text-white/70 text-[10px]">{time}</p>}
+            </div>
           </div>
-        </div>
 
         {/* Watch button */}
         <button
@@ -162,6 +164,7 @@ const VideoStatsDialog = ({ video, open, onOpenChange }: VideoStatsDialogProps) 
             value={date}
             subValue={time}
           />
+        </div>
         </div>
       </DialogContent>
     </Dialog>
