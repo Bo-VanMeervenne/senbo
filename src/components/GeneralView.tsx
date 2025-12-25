@@ -3,6 +3,7 @@ import TrafficSourceChart from "@/components/TrafficSourceChart";
 import CountryRevenueTable from "@/components/CountryRevenueTable";
 import DeviceViewsChart from "@/components/DeviceViewsChart";
 import SubscriberStatsCards from "@/components/SubscriberStatsCards";
+import BestDayToPost from "@/components/BestDayToPost";
 
 const GeneralView = () => {
   return (
@@ -13,6 +14,8 @@ const GeneralView = () => {
       
       <div className="w-full max-w-4xl space-y-6">
         <DailyRevenueChart />
+        
+        <BestDayToPost />
         
         <DeviceViewsChart />
         
