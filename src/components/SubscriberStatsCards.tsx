@@ -30,16 +30,10 @@ const SubscriberStatsCards = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
-              <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-secondary/50 rounded w-1/2" />
-                <div className="h-12 bg-secondary/30 rounded w-3/4" />
-              </div>
-            </div>
-          ))}
+      <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-secondary/50 rounded w-1/3" />
+          <div className="h-16 bg-secondary/30 rounded" />
         </div>
       </div>
     );
@@ -59,65 +53,52 @@ const SubscriberStatsCards = () => {
   const unsubscribedPercent = ((unsubscribed.views / totalViews) * 100).toFixed(1);
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
       <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-primary" />
         Subscriber vs Non-Subscriber
       </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Subscribed Card */}
-        <div className="bg-card/50 backdrop-blur-sm border border-primary/30 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-          
-          <div className="relative">
-            <div className="flex items-center gap-2 text-primary mb-2">
-              <UserPlus className="w-5 h-5" />
-              <span className="text-sm font-medium uppercase tracking-wider">Subscribers</span>
+      {/* Combined progress bar */}
+      <div className="h-3 bg-secondary/30 rounded-full overflow-hidden flex mb-4">
+        <div 
+          className="h-full bg-primary transition-all duration-500"
+          style={{ width: `${subscribedPercent}%` }}
+        />
+        <div 
+          className="h-full bg-muted-foreground/40 transition-all duration-500"
+          style={{ width: `${unsubscribedPercent}%` }}
+        />
+      </div>
+      
+      {/* Stats row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-primary" />
+          <div>
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Subscribers</span>
             </div>
-            
-            <div className="text-4xl font-bold text-foreground mb-1">
-              {subscribedPercent}%
-            </div>
-            
-            <div className="text-sm text-muted-foreground">
-              {formatViews(subscribed.views)} views
-            </div>
-            
-            <div className="mt-4 h-2 bg-secondary/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${subscribedPercent}%` }}
-              />
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-foreground">{subscribedPercent}%</span>
+              <span className="text-xs text-muted-foreground">({formatViews(subscribed.views)})</span>
             </div>
           </div>
         </div>
-
-        {/* Unsubscribed Card */}
-        <div className="bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/20 rounded-full -translate-y-1/2 translate-x-1/2" />
-          
-          <div className="relative">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Users className="w-5 h-5" />
-              <span className="text-sm font-medium uppercase tracking-wider">Non-Subscribers</span>
+        
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="flex items-center gap-2 justify-end">
+              <span className="text-sm font-medium text-foreground">Non-Subscribers</span>
+              <Users className="w-4 h-4 text-muted-foreground" />
             </div>
-            
-            <div className="text-4xl font-bold text-foreground mb-1">
-              {unsubscribedPercent}%
-            </div>
-            
-            <div className="text-sm text-muted-foreground">
-              {formatViews(unsubscribed.views)} views
-            </div>
-            
-            <div className="mt-4 h-2 bg-secondary/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-muted-foreground/50 rounded-full transition-all duration-500"
-                style={{ width: `${unsubscribedPercent}%` }}
-              />
+            <div className="flex items-baseline gap-2 justify-end">
+              <span className="text-xs text-muted-foreground">({formatViews(unsubscribed.views)})</span>
+              <span className="text-2xl font-bold text-foreground">{unsubscribedPercent}%</span>
             </div>
           </div>
+          <div className="w-3 h-3 rounded-full bg-muted-foreground/40" />
         </div>
       </div>
     </div>
