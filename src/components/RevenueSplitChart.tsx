@@ -9,6 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Info } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TimelineEntry {
   date: string;
@@ -100,9 +102,19 @@ const RevenueSplitChart = () => {
     <div className="w-full max-w-4xl mx-auto mt-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <p className="text-muted-foreground text-xs uppercase tracking-[0.2em]">
-          Revenue Split Over Time
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-muted-foreground text-xs uppercase tracking-[0.2em]">
+            Revenue Split Over Time
+          </p>
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3 h-3 text-muted-foreground/50 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[200px] text-xs">
+              Daily revenue delayed 3-5 days. Recent data are estimates.
+            </TooltipContent>
+          </UITooltip>
+        </div>
         
         {/* Time Filter Toggle */}
         <div className="flex gap-1">

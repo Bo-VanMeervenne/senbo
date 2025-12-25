@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp } from "lucide-react";
+import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import VideoStatsDialog from "./VideoStatsDialog";
 
 interface Video {
@@ -273,12 +274,28 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
             </div>
             <div className="w-px h-10 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Views</p>
+              <div className="flex items-center gap-1">
+                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Views</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-2.5 h-2.5 text-muted-foreground/40 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">24-48h delay</TooltipContent>
+                </Tooltip>
+              </div>
               <p className="text-2xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
             </div>
             <div className="w-px h-10 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
+              <div className="flex items-center gap-1">
+                <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-2.5 h-2.5 text-muted-foreground/40 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">3-5 day delay</TooltipContent>
+                </Tooltip>
+              </div>
               <p className="text-2xl font-light tracking-tight">
                 <span className="text-primary">$</span>
                 <span className="font-mono text-foreground">

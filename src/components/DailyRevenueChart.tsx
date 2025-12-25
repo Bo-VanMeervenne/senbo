@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO, getDay } from "date-fns";
-import { TrendingUp, DollarSign, Eye, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Eye, Calendar, Info } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DailyData {
@@ -60,10 +60,18 @@ const WeekdayWidget = ({ weekdayStats }: WeekdayWidgetProps) => {
   return (
     <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary" />
-          Revenue by Day of Week
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-primary" />
+            Revenue by Day of Week
+          </h3>
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3 h-3 text-muted-foreground/40 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">3-5 day revenue delay</TooltipContent>
+          </UITooltip>
+        </div>
         {bestDay && (
           <span className="text-xs text-muted-foreground">
             Best: <span className="text-primary font-medium">{bestDay.day}</span>
@@ -266,10 +274,22 @@ const DailyRevenueChart = () => {
         <div className="p-6 border-b border-border/20">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
+                </h3>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-[200px] text-xs">
+                    {metric === 'revenue' 
+                      ? 'Revenue is delayed 3-5 days. Recent data shown with dashed line.' 
+                      : 'Views are delayed 24-48 hours.'}
+                  </TooltipContent>
+                </UITooltip>
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {filteredData.length} days
               </p>

@@ -26,7 +26,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-grid bg-noise bg-fixed">
       {/* Minimal Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-center pt-8">
