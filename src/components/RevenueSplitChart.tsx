@@ -8,7 +8,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 interface TimelineEntry {
@@ -73,14 +72,24 @@ const RevenueSplitChart = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-muted-foreground text-sm mb-2">{formatDate(label)}</p>
-          <p className="text-[#22c55e] font-medium">
-            Senne: {formatCurrency(payload[0]?.value || 0)}
+        <div className="bg-card border border-border/50 rounded-xl p-4 shadow-xl backdrop-blur-sm">
+          <p className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
+            {formatDate(label)}
           </p>
-          <p className="text-[#3b82f6] font-medium">
-            Bo: {formatCurrency(payload[1]?.value || 0)}
-          </p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-muted-foreground text-sm">Senne</span>
+              <span className="font-mono text-primary font-medium">
+                {formatCurrency(payload[0]?.value || 0)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-muted-foreground text-sm">Bo</span>
+              <span className="font-mono text-foreground/70 font-medium">
+                {formatCurrency(payload[1]?.value || 0)}
+              </span>
+            </div>
+          </div>
         </div>
       );
     }
@@ -88,103 +97,128 @@ const RevenueSplitChart = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-8">
-      <div className="bg-card border border-border/50 rounded-2xl p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h3 className="text-foreground font-medium text-lg">Revenue Split Over Time</h3>
-          
-          {/* Time Filter Toggle */}
-          <div className="flex bg-secondary rounded-lg p-1">
-            {(["7", "30", "60"] as TimeFilter[]).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setTimeFilter(filter)}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                  timeFilter === filter
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {filter} Days
-              </button>
-            ))}
-          </div>
+    <div className="w-full max-w-4xl mx-auto mt-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <p className="text-muted-foreground text-xs uppercase tracking-[0.2em]">
+          Revenue Split Over Time
+        </p>
+        
+        {/* Time Filter Toggle */}
+        <div className="flex gap-1">
+          {(["7", "30", "60"] as TimeFilter[]).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setTimeFilter(filter)}
+              className={`px-4 py-2 text-xs uppercase tracking-wider rounded-lg transition-all duration-300 ${
+                timeFilter === filter
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
+              }`}
+            >
+              {filter}d
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Chart */}
-        {isLoading ? (
-          <div className="h-64 bg-secondary animate-pulse rounded-lg" />
-        ) : filteredData.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            No data available for this period
-          </div>
-        ) : (
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={filteredData}>
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatDate}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tickFormatter={(value) => `$${value}`}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  width={60}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="top"
-                  height={36}
-                  formatter={(value) => (
-                    <span className="text-foreground text-sm">{value}</span>
-                  )}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="senneRevenue"
-                  name="Senne"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#22c55e" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="boRevenue"
-                  name="Bo"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#3b82f6" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      {/* Chart Container */}
+      <div className="group relative">
+        {/* Glow effect */}
+        <div className="absolute -inset-px bg-gradient-to-b from-primary/10 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+        
+        <div className="relative bg-card border border-border/50 rounded-3xl p-6 lg:p-8 transition-all duration-500 group-hover:border-primary/30">
+          {/* Chart */}
+          {isLoading ? (
+            <div className="h-64 bg-secondary animate-pulse rounded-xl" />
+          ) : filteredData.length === 0 ? (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No data available for this period
+            </div>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={filteredData}>
+                  <defs>
+                    <linearGradient id="senneGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(160, 84%, 39%)" />
+                      <stop offset="100%" stopColor="hsl(160, 84%, 50%)" />
+                    </linearGradient>
+                    <linearGradient id="boGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(0, 0%, 40%)" />
+                      <stop offset="100%" stopColor="hsl(0, 0%, 55%)" />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={formatDate}
+                    stroke="hsl(0, 0%, 25%)"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `$${value}`}
+                    stroke="hsl(0, 0%, 25%)"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    width={50}
+                    dx={-5}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
+                  <Line
+                    type="monotone"
+                    dataKey="senneRevenue"
+                    name="Senne"
+                    stroke="url(#senneGradient)"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ 
+                      r: 5, 
+                      fill: "hsl(160, 84%, 39%)",
+                      stroke: "hsl(160, 84%, 39%)",
+                      strokeWidth: 2
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="boRevenue"
+                    name="Bo"
+                    stroke="url(#boGradient)"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ 
+                      r: 5, 
+                      fill: "hsl(0, 0%, 50%)",
+                      stroke: "hsl(0, 0%, 50%)",
+                      strokeWidth: 2
+                    }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-        {/* Totals */}
-        {!isLoading && filteredData.length > 0 && (
-          <div className="flex justify-center gap-8 mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#22c55e]" />
-              <span className="text-muted-foreground text-sm">Senne:</span>
-              <span className="text-foreground font-medium">{formatCurrency(totals.senne)}</span>
+          {/* Totals / Legend */}
+          {!isLoading && filteredData.length > 0 && (
+            <div className="flex justify-center gap-12 mt-8 pt-6 border-t border-border/30">
+              <div className="text-center">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Senne</p>
+                <p className="font-mono text-2xl text-primary font-medium">
+                  {formatCurrency(totals.senne)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Bo</p>
+                <p className="font-mono text-2xl text-foreground/70 font-medium">
+                  {formatCurrency(totals.bo)}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#3b82f6]" />
-              <span className="text-muted-foreground text-sm">Bo:</span>
-              <span className="text-foreground font-medium">{formatCurrency(totals.bo)}</span>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
