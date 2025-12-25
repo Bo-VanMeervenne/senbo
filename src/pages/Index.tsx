@@ -26,7 +26,8 @@ const Index = () => {
     return <PasswordGate onSuccess={() => setIsAuthenticated(true)} />;
   }
 
-  const showSubFilters = activeTab === 'revenue' || activeTab === 'videos';
+  const showSubFilters = activeTab === 'revenue' || activeTab === 'videos' || activeTab === 'learn';
+  const showSourceFilter = activeTab === 'videos' || activeTab === 'learn';
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,8 +105,8 @@ const Index = () => {
               </button>
             </div>
 
-            {/* Source filter - only for videos */}
-            {activeTab === 'videos' && (
+            {/* Source filter - for videos and learn */}
+            {showSourceFilter && (
               <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
                 <button
                   onClick={() => setSourceFilter('all')}
@@ -152,7 +153,7 @@ const Index = () => {
         ) : activeTab === 'videos' ? (
           <CombinedVideosView month={monthTab} sourceFilter={sourceFilter} />
         ) : (
-          <LearnView month={monthTab} />
+          <LearnView month={monthTab} sourceFilter={sourceFilter} />
         )}
       </div>
     </div>
