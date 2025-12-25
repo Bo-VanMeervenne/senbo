@@ -85,7 +85,7 @@ const RevenueSplitChart = () => {
             </div>
             <div className="flex items-center justify-between gap-6">
               <span className="text-muted-foreground text-sm">Bo</span>
-              <span className="font-mono font-medium" style={{ color: "hsl(140, 70%, 45%)" }}>
+              <span className="font-mono font-medium" style={{ color: "hsl(160, 84%, 35%)" }}>
                 {formatCurrency(payload[1]?.value || 0)}
               </span>
             </div>
@@ -145,8 +145,8 @@ const RevenueSplitChart = () => {
                       <stop offset="100%" stopColor="hsl(160, 84%, 50%)" />
                     </linearGradient>
                     <linearGradient id="boGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="hsl(140, 70%, 40%)" />
-                      <stop offset="100%" stopColor="hsl(140, 70%, 50%)" />
+                      <stop offset="0%" stopColor="hsl(160, 84%, 30%)" />
+                      <stop offset="100%" stopColor="hsl(160, 84%, 42%)" />
                     </linearGradient>
                   </defs>
                   <XAxis
@@ -191,8 +191,8 @@ const RevenueSplitChart = () => {
                     dot={false}
                     activeDot={{ 
                       r: 5, 
-                      fill: "hsl(140, 70%, 45%)",
-                      stroke: "hsl(140, 70%, 45%)",
+                      fill: "hsl(160, 84%, 35%)",
+                      stroke: "hsl(160, 84%, 35%)",
                       strokeWidth: 2
                     }}
                   />
@@ -212,7 +212,7 @@ const RevenueSplitChart = () => {
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Bo</p>
-                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(140, 70%, 45%)" }}>
+                <p className="font-mono text-2xl font-medium" style={{ color: "hsl(160, 84%, 35%)" }}>
                   {formatCurrency(totals.bo)}
                 </p>
               </div>
