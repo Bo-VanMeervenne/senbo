@@ -1,0 +1,125 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Globe } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface CountryData {
+  country: string;
+  revenue: number;
+  views: number;
+  rpm: number;
+}
+
+// Country code to flag emoji mapping
+const countryFlags: Record<string, string> = {
+  'US': '🇺🇸', 'GB': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'DE': '🇩🇪',
+  'FR': '🇫🇷', 'NL': '🇳🇱', 'BE': '🇧🇪', 'IT': '🇮🇹', 'ES': '🇪🇸',
+  'BR': '🇧🇷', 'MX': '🇲🇽', 'IN': '🇮🇳', 'JP': '🇯🇵', 'KR': '🇰🇷',
+  'CN': '🇨🇳', 'RU': '🇷🇺', 'PL': '🇵🇱', 'SE': '🇸🇪', 'NO': '🇳🇴',
+  'DK': '🇩🇰', 'FI': '🇫🇮', 'AT': '🇦🇹', 'CH': '🇨🇭', 'IE': '🇮🇪',
+  'NZ': '🇳🇿', 'SG': '🇸🇬', 'HK': '🇭🇰', 'TW': '🇹🇼', 'TH': '🇹🇭',
+  'MY': '🇲🇾', 'PH': '🇵🇭', 'ID': '🇮🇩', 'VN': '🇻🇳', 'ZA': '🇿🇦',
+  'NG': '🇳🇬', 'EG': '🇪🇬', 'SA': '🇸🇦', 'AE': '🇦🇪', 'IL': '🇮🇱',
+  'TR': '🇹🇷', 'GR': '🇬🇷', 'PT': '🇵🇹', 'CZ': '🇨🇿', 'HU': '🇭🇺',
+  'RO': '🇷🇴', 'UA': '🇺🇦', 'AR': '🇦🇷', 'CL': '🇨🇱', 'CO': '🇨🇴',
+  'PE': '🇵🇪', 'PK': '🇵🇰', 'BD': '🇧🇩', 'LK': '🇱🇰', 'NP': '🇳🇵',
+};
+
+const formatViews = (views: number): string => {
+  if (views >= 1000000) {
+    return `${(views / 1000000).toFixed(1)}M`;
+  }
+  if (views >= 1000) {
+    return `${(views / 1000).toFixed(1)}K`;
+  }
+  return views.toLocaleString();
+};
+
+const CountryRevenueTable = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['country-revenue'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('get-country-revenue');
+      if (error) throw error;
+      return data.countryData as CountryData[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-secondary/50 rounded w-1/3" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 bg-secondary/30 rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data?.length) {
+    return null;
+  }
+
+  return (
+    <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6">
+      <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6">
+        <Globe className="w-5 h-5 text-primary" />
+        Revenue by Country
+      </h3>
+      
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border/30">
+              <TableHead className="text-muted-foreground">#</TableHead>
+              <TableHead className="text-muted-foreground">Country</TableHead>
+              <TableHead className="text-muted-foreground text-right">Revenue</TableHead>
+              <TableHead className="text-muted-foreground text-right">Views</TableHead>
+              <TableHead className="text-muted-foreground text-right">RPM</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((item, index) => {
+              const flag = countryFlags[item.country] || '🌍';
+              
+              return (
+                <TableRow 
+                  key={item.country} 
+                  className="border-border/20 hover:bg-secondary/20 transition-colors"
+                >
+                  <TableCell className="text-muted-foreground text-sm">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    <span className="mr-2">{flag}</span>
+                    {item.country}
+                  </TableCell>
+                  <TableCell className="text-right text-primary font-medium">
+                    ${item.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatViews(item.views)}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    ${item.rpm.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default CountryRevenueTable;
