@@ -122,7 +122,7 @@ const VideoCard = ({
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-center justify-between">
             <span className="text-white/50 text-xs font-medium">{formatViews(video.views)} views</span>
-            <span className="font-mono text-lg font-semibold text-red-300 drop-shadow-[0_0_8px_rgba(252,165,165,0.5)]">{formatRevenue(video.revenueAfterTax)}</span>
+            <span className="font-mono text-lg font-semibold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{formatRevenue(video.revenueAfterTax)}</span>
           </div>
         </div>
       </div>
