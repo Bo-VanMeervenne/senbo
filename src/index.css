@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
@@ -15,8 +15,8 @@
     --popover: 0 0% 5%;
     --popover-foreground: 0 0% 92%;
 
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 2%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 92%;
@@ -24,15 +24,15 @@
     --muted: 0 0% 25%;
     --muted-foreground: 0 0% 50%;
 
-    --accent: 160 84% 39%;
-    --accent-foreground: 0 0% 2%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 12%;
     --input: 0 0% 12%;
-    --ring: 160 84% 39%;
+    --ring: 0 100% 50%;
 
     --radius: 0.75rem;
   }
@@ -50,8 +50,9 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Bebas Neue', sans-serif;
     min-height: 100%;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -62,8 +63,8 @@
   
   .bg-grid {
     background-image: 
-      radial-gradient(circle at 25% 25%, hsl(160 84% 39% / 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(160 84% 39% / 0.02) 0%, transparent 50%),
+      radial-gradient(circle at 25% 25%, hsl(0 100% 50% / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(0 100% 50% / 0.02) 0%, transparent 50%),
       linear-gradient(to bottom, transparent 0%, hsl(0 0% 2%) 100%);
     background-size: 100% 100%;
   }
