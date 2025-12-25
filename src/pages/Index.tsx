@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import RevenueDashboard from "@/components/RevenueDashboard";
-import VideosView from "@/components/VideosView";
-import SenneVideosView from "@/components/SenneVideosView";
 import CombinedVideosView from "@/components/CombinedVideosView";
 import GeneralView from "@/components/GeneralView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'general' | 'revenue' | 'videos' | 'senne' | 'both';
+type Tab = 'general' | 'revenue' | 'videos';
 type MonthTab = 'last' | 'current';
+type SourceFilter = 'all' | 'senbo' | 'senne';
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [monthTab, setMonthTab] = useState<MonthTab>('current');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
 
   useEffect(() => {
     const auth = localStorage.getItem("dashboard-auth");
@@ -51,53 +51,29 @@ const Index = () => {
             >
               Revenue Split
             </button>
-            
-            <span className="text-muted-foreground/30 text-xs px-2">|</span>
-            
             <button
               onClick={() => setActiveTab('videos')}
-              className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                 activeTab === 'videos' 
                   ? 'bg-primary text-primary-foreground' 
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              S&B
-            </button>
-            <button
-              onClick={() => setActiveTab('senne')}
-              className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'senne' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Senne
-            </button>
-            <button
-              onClick={() => setActiveTab('both')}
-              className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'both' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              All
+              Videos
             </button>
           </div>
         </div>
 
-        {/* Month sub-tabs - only show for revenue, videos, and senne */}
+        {/* Sub-filters */}
         {activeTab !== 'general' && (
-          <div className="flex justify-center mt-3">
+          <div className="flex justify-center mt-3 gap-3">
+            {/* Month toggle */}
             <div className="relative flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
-              {/* Sliding background */}
               <div 
                 className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-card rounded-full shadow-sm transition-all duration-300 ease-out ${
                   monthTab === 'current' ? 'left-1' : 'left-[calc(50%+2px)]'
                 }`}
               />
-              
               <button
                 onClick={() => setMonthTab('current')}
                 className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
@@ -119,6 +95,53 @@ const Index = () => {
                 Last Month
               </button>
             </div>
+
+            {/* Source filter - only for videos */}
+            {activeTab === 'videos' && (
+              <div className="relative flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
+                <div 
+                  className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-out ${
+                    sourceFilter === 'senne' ? 'bg-orange-500' : 'bg-card'
+                  } ${
+                    sourceFilter === 'all' 
+                      ? 'left-1 w-[calc(33.33%-4px)]' 
+                      : sourceFilter === 'senbo' 
+                        ? 'left-[calc(33.33%+1px)] w-[calc(33.33%-2px)]' 
+                        : 'left-[calc(66.66%+2px)] w-[calc(33.33%-4px)]'
+                  }`}
+                />
+                <button
+                  onClick={() => setSourceFilter('all')}
+                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                    sourceFilter === 'all' 
+                      ? 'text-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setSourceFilter('senbo')}
+                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                    sourceFilter === 'senbo' 
+                      ? 'text-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  S&B
+                </button>
+                <button
+                  onClick={() => setSourceFilter('senne')}
+                  className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                    sourceFilter === 'senne' 
+                      ? 'text-white' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Senne
+                </button>
+              </div>
+            )}
           </div>
         )}
       </nav>
@@ -129,12 +152,8 @@ const Index = () => {
           <GeneralView />
         ) : activeTab === 'revenue' ? (
           <RevenueDashboard month={monthTab} />
-        ) : activeTab === 'videos' ? (
-          <VideosView month={monthTab} />
-        ) : activeTab === 'senne' ? (
-          <SenneVideosView month={monthTab} />
         ) : (
-          <CombinedVideosView month={monthTab} />
+          <CombinedVideosView month={monthTab} sourceFilter={sourceFilter} />
         )}
       </div>
     </div>
