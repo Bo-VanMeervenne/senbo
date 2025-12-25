@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.get-daily-revenue]
 verify_jwt = false
+
+[functions.get-traffic-source]
+verify_jwt = false
+
+[functions.get-country-revenue]
+verify_jwt = false
+
+[functions.get-device-revenue]
+verify_jwt = false
+
+[functions.get-subscriber-status]
+verify_jwt = false

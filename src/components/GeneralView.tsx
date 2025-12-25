@@ -1,4 +1,8 @@
 import DailyRevenueChart from "@/components/DailyRevenueChart";
+import TrafficSourceChart from "@/components/TrafficSourceChart";
+import CountryRevenueTable from "@/components/CountryRevenueTable";
+import DeviceViewsChart from "@/components/DeviceViewsChart";
+import SubscriberStatsCards from "@/components/SubscriberStatsCards";
 
 const GeneralView = () => {
   return (
@@ -7,8 +11,18 @@ const GeneralView = () => {
         Overall Performance
       </p>
       
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-4xl space-y-8">
         <DailyRevenueChart />
+        
+        {/* Two column layout for Traffic and Device charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TrafficSourceChart />
+          <DeviceViewsChart />
+        </div>
+        
+        <SubscriberStatsCards />
+        
+        <CountryRevenueTable />
       </div>
     </div>
   );
