@@ -121,16 +121,6 @@ const VideoCard = ({
           </div>
         )}
 
-        {/* Stats button overlay */}
-        <div className="absolute bottom-12 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-          <div className={`p-2.5 backdrop-blur-md rounded-xl ${
-            isSenneOnly 
-              ? 'bg-orange-500 shadow-[0_0_20px_-5px_rgba(249,115,22,0.8)]' 
-              : 'bg-primary shadow-[0_0_20px_-5px_hsl(var(--primary)/0.8)]'
-          }`}>
-            <BarChart3 className="w-4 h-4 text-white" />
-          </div>
-        </div>
         
         {/* Stats overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
