@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.get-subscriber-status]
 verify_jwt = false
+
+[functions.get-subscriber-count]
+verify_jwt = false
