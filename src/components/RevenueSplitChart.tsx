@@ -34,13 +34,14 @@ const RevenueSplitChart = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Filter data based on selected time range
+  // Filter data based on selected time range - uses most recent data point as reference
   const getFilteredData = () => {
     if (!allData || allData.length === 0) return [];
 
-    const now = new Date();
+    // Find the most recent date in the data (data is already sorted)
+    const mostRecentDate = new Date(allData[allData.length - 1].date);
     const daysAgo = parseInt(timeFilter);
-    const cutoffDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(mostRecentDate.getTime() - daysAgo * 24 * 60 * 60 * 1000);
 
     return allData.filter((entry) => new Date(entry.date) >= cutoffDate);
   };
