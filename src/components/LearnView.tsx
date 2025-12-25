@@ -64,9 +64,10 @@ const formatMetricValue = (value: number, metric: string): string => {
 
 interface LearnViewProps {
   month: 'last' | 'current';
+  sourceFilter: 'all' | 'senbo' | 'senne';
 }
 
-const LearnView = ({ month }: LearnViewProps) => {
+const LearnView = ({ month, sourceFilter }: LearnViewProps) => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [highStreak, setHighStreak] = useState(0);
@@ -75,55 +76,62 @@ const LearnView = ({ month }: LearnViewProps) => {
   const [selectedSide, setSelectedSide] = useState<'left' | 'right' | null>(null);
   
 
-  const { data: allVideos = [], isLoading } = useQuery({
+  const { data: allVideosRaw = [], isLoading } = useQuery({
     queryKey: ['learn-videos', month],
     queryFn: () => fetchAllVideos(month),
     staleTime: 1000 * 60 * 5,
   });
 
+  // Filter videos by source
+  const allVideos = useMemo(() => {
+    if (sourceFilter === 'all') return allVideosRaw;
+    return allVideosRaw.filter(v => v.source === sourceFilter);
+  }, [allVideosRaw, sourceFilter]);
+
   // Get the month label for questions
   const monthLabel = month === 'current' ? 'this month' : 'last month';
 
-  // Generate random pairs of videos with questions - ensuring no duplicates and balanced sources
+  // Generate random pairs of videos with questions
   const rounds = useMemo(() => {
     if (allVideos.length < 2) return [];
-    
-    // Separate videos by source
-    const senboVideos = allVideos.filter(v => v.source === 'senbo');
-    const senneVideos = allVideos.filter(v => v.source === 'senne');
     
     const pairs: { left: Video; right: Video; question: Question }[] = [];
     const usedPairs = new Set<string>();
     
-    // Try to create balanced pairs: senbo vs senne, senbo vs senbo, senne vs senne
-    const pairTypes: Array<'mixed' | 'senbo' | 'senne'> = ['mixed', 'mixed', 'senbo', 'senne'];
+    // If filtering by source, just pick random pairs from that source
+    // If all, try to balance mixed pairs
+    const senboVideos = allVideos.filter(v => v.source === 'senbo');
+    const senneVideos = allVideos.filter(v => v.source === 'senne');
     
     for (let attempt = 0; attempt < 200 && pairs.length < 50; attempt++) {
-      const pairType = pairTypes[attempt % pairTypes.length];
-      
       let leftVideo: Video | undefined;
       let rightVideo: Video | undefined;
       
-      if (pairType === 'mixed' && senboVideos.length > 0 && senneVideos.length > 0) {
-        // One from each source
-        leftVideo = senboVideos[Math.floor(Math.random() * senboVideos.length)];
-        rightVideo = senneVideos[Math.floor(Math.random() * senneVideos.length)];
-      } else if (pairType === 'senbo' && senboVideos.length >= 2) {
-        // Both from senbo
-        const idx1 = Math.floor(Math.random() * senboVideos.length);
-        let idx2 = Math.floor(Math.random() * senboVideos.length);
-        while (idx2 === idx1) idx2 = Math.floor(Math.random() * senboVideos.length);
-        leftVideo = senboVideos[idx1];
-        rightVideo = senboVideos[idx2];
-      } else if (pairType === 'senne' && senneVideos.length >= 2) {
-        // Both from senne
-        const idx1 = Math.floor(Math.random() * senneVideos.length);
-        let idx2 = Math.floor(Math.random() * senneVideos.length);
-        while (idx2 === idx1) idx2 = Math.floor(Math.random() * senneVideos.length);
-        leftVideo = senneVideos[idx1];
-        rightVideo = senneVideos[idx2];
-      } else {
-        // Fallback: pick any two different videos
+      if (sourceFilter === 'all' && senboVideos.length > 0 && senneVideos.length > 0) {
+        // Balance: alternate between mixed, senbo-only, senne-only
+        const pairTypes: Array<'mixed' | 'senbo' | 'senne'> = ['mixed', 'mixed', 'senbo', 'senne'];
+        const pairType = pairTypes[attempt % pairTypes.length];
+        
+        if (pairType === 'mixed') {
+          leftVideo = senboVideos[Math.floor(Math.random() * senboVideos.length)];
+          rightVideo = senneVideos[Math.floor(Math.random() * senneVideos.length)];
+        } else if (pairType === 'senbo' && senboVideos.length >= 2) {
+          const idx1 = Math.floor(Math.random() * senboVideos.length);
+          let idx2 = Math.floor(Math.random() * senboVideos.length);
+          while (idx2 === idx1) idx2 = Math.floor(Math.random() * senboVideos.length);
+          leftVideo = senboVideos[idx1];
+          rightVideo = senboVideos[idx2];
+        } else if (pairType === 'senne' && senneVideos.length >= 2) {
+          const idx1 = Math.floor(Math.random() * senneVideos.length);
+          let idx2 = Math.floor(Math.random() * senneVideos.length);
+          while (idx2 === idx1) idx2 = Math.floor(Math.random() * senneVideos.length);
+          leftVideo = senneVideos[idx1];
+          rightVideo = senneVideos[idx2];
+        }
+      }
+      
+      // Fallback or filtered source: pick from filtered list
+      if (!leftVideo || !rightVideo) {
         const idx1 = Math.floor(Math.random() * allVideos.length);
         let idx2 = Math.floor(Math.random() * allVideos.length);
         while (idx2 === idx1 || allVideos[idx1].videoId === allVideos[idx2].videoId) {
@@ -147,7 +155,7 @@ const LearnView = ({ month }: LearnViewProps) => {
       });
     }
     return pairs;
-  }, [allVideos]);
+  }, [allVideos, sourceFilter]);
 
   const currentRound = rounds[roundIndex];
 
