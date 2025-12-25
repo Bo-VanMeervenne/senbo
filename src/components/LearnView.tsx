@@ -62,12 +62,15 @@ const formatMetricValue = (value: number, metric: string): string => {
   return value.toString();
 };
 
+type MetricFilter = 'all' | 'revenue' | 'views';
+
 interface LearnViewProps {
   month: 'last' | 'current';
   sourceFilter: 'all' | 'senbo' | 'senne';
+  metricFilter: MetricFilter;
 }
 
-const LearnView = ({ month, sourceFilter }: LearnViewProps) => {
+const LearnView = ({ month, sourceFilter, metricFilter }: LearnViewProps) => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [highStreak, setHighStreak] = useState(0);
@@ -91,9 +94,17 @@ const LearnView = ({ month, sourceFilter }: LearnViewProps) => {
   // Get the month label for questions
   const monthLabel = month === 'current' ? 'this month' : 'last month';
 
+  // Filter questions by metric
+  const filteredQuestions = useMemo(() => {
+    if (metricFilter === 'all') return questions;
+    if (metricFilter === 'revenue') return questions.filter(q => q.metric === 'revenue');
+    if (metricFilter === 'views') return questions.filter(q => q.metric === 'views');
+    return questions;
+  }, [metricFilter]);
+
   // Generate random pairs of videos with questions
   const rounds = useMemo(() => {
-    if (allVideos.length < 2) return [];
+    if (allVideos.length < 2 || filteredQuestions.length === 0) return [];
     
     const pairs: { left: Video; right: Video; question: Question }[] = [];
     const usedPairs = new Set<string>();
@@ -147,7 +158,7 @@ const LearnView = ({ month, sourceFilter }: LearnViewProps) => {
       if (usedPairs.has(pairKey)) continue;
       usedPairs.add(pairKey);
       
-      const question = questions[Math.floor(Math.random() * questions.length)];
+      const question = filteredQuestions[Math.floor(Math.random() * filteredQuestions.length)];
       pairs.push({
         left: leftVideo,
         right: rightVideo,
@@ -155,7 +166,7 @@ const LearnView = ({ month, sourceFilter }: LearnViewProps) => {
       });
     }
     return pairs;
-  }, [allVideos, sourceFilter]);
+  }, [allVideos, sourceFilter, filteredQuestions]);
 
   const currentRound = rounds[roundIndex];
 

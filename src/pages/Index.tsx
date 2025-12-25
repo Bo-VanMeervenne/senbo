@@ -8,12 +8,14 @@ import PasswordGate from "@/components/PasswordGate";
 type Tab = 'general' | 'revenue' | 'videos' | 'learn';
 type MonthTab = 'last' | 'current';
 type SourceFilter = 'all' | 'senbo' | 'senne';
+type MetricFilter = 'all' | 'revenue' | 'views';
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [monthTab, setMonthTab] = useState<MonthTab>('current');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [metricFilter, setMetricFilter] = useState<MetricFilter>('all');
 
   useEffect(() => {
     const auth = localStorage.getItem("dashboard-auth");
@@ -140,6 +142,42 @@ const Index = () => {
                 </button>
               </div>
             )}
+
+            {/* Metric filter - only for learn */}
+            {activeTab === 'learn' && (
+              <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
+                <button
+                  onClick={() => setMetricFilter('all')}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                    metricFilter === 'all' 
+                      ? 'bg-foreground text-background shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setMetricFilter('revenue')}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                    metricFilter === 'revenue' 
+                      ? 'bg-emerald-500 text-white shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Revenue
+                </button>
+                <button
+                  onClick={() => setMetricFilter('views')}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                    metricFilter === 'views' 
+                      ? 'bg-blue-500 text-white shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Views
+                </button>
+              </div>
+            )}
           </div>
         )}
       </nav>
@@ -153,7 +191,7 @@ const Index = () => {
         ) : activeTab === 'videos' ? (
           <CombinedVideosView month={monthTab} sourceFilter={sourceFilter} />
         ) : (
-          <LearnView month={monthTab} sourceFilter={sourceFilter} />
+          <LearnView month={monthTab} sourceFilter={sourceFilter} metricFilter={metricFilter} />
         )}
       </div>
     </div>
