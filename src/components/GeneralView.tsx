@@ -4,6 +4,7 @@ import TrafficSourceChart from "@/components/TrafficSourceChart";
 import CountryRevenueTable from "@/components/CountryRevenueTable";
 import DeviceViewsChart from "@/components/DeviceViewsChart";
 import SubscriberStatsCards from "@/components/SubscriberStatsCards";
+import LiveSubscriberCount from "@/components/LiveSubscriberCount";
 import { toast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
 
@@ -61,16 +62,20 @@ const GeneralView = () => {
 
   return (
     <div className="min-h-[calc(100vh-128px)] flex flex-col items-center px-6 py-12">
-      {/* Welcome Header */}
-
-      {/* Real Stats */}
-      <div className="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border/50 backdrop-blur-sm">
-          <Calendar className="w-4 h-4 text-emerald-500" />
-          <span className="text-sm text-muted-foreground">Next Payday</span>
-          <span className="text-sm font-semibold text-foreground">
-            {daysUntilPayday === 0 ? "Today!" : `${daysUntilPayday} days`}
-          </span>
+      {/* Welcome Header with Subscriber Count and Payday */}
+      <div className="w-full max-w-4xl mb-10 animate-fade-in">
+        <div className="flex items-start justify-between">
+          {/* Left: Welcome + Subscriber Count */}
+          <LiveSubscriberCount />
+          
+          {/* Right: Next Payday */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border/50 backdrop-blur-sm">
+            <Calendar className="w-4 h-4 text-emerald-500" />
+            <span className="text-sm text-muted-foreground">Next Payday</span>
+            <span className="text-sm font-semibold text-foreground">
+              {daysUntilPayday === 0 ? "Today!" : `${daysUntilPayday} days`}
+            </span>
+          </div>
         </div>
       </div>
 
