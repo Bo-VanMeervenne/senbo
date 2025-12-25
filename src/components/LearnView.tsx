@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Trophy, TrendingUp, Eye, DollarSign, ThumbsUp, Share2, UserPlus, Clock, RotateCcw, Zap } from "lucide-react";
 
 interface Video {
@@ -73,7 +73,7 @@ const LearnView = ({ month }: LearnViewProps) => {
   const [roundIndex, setRoundIndex] = useState(0);
   const [showResult, setShowResult] = useState<'correct' | 'wrong' | null>(null);
   const [selectedSide, setSelectedSide] = useState<'left' | 'right' | null>(null);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  
 
   const { data: allVideos = [], isLoading } = useQuery({
     queryKey: ['learn-videos', month],
@@ -81,18 +81,31 @@ const LearnView = ({ month }: LearnViewProps) => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Generate random pairs of videos with questions
+  // Generate random pairs of videos with questions - ensuring no duplicates
   const rounds = useMemo(() => {
     if (allVideos.length < 2) return [];
     
-    const shuffled = [...allVideos].sort(() => Math.random() - 0.5);
     const pairs: { left: Video; right: Video; question: Question }[] = [];
+    const usedPairs = new Set<string>();
     
-    for (let i = 0; i < Math.min(50, Math.floor(shuffled.length / 2)); i++) {
+    for (let i = 0; i < 50 && pairs.length < 50; i++) {
+      // Pick two different random videos
+      const leftIdx = Math.floor(Math.random() * allVideos.length);
+      let rightIdx = Math.floor(Math.random() * allVideos.length);
+      
+      // Ensure right is different from left
+      while (rightIdx === leftIdx || allVideos[leftIdx].videoId === allVideos[rightIdx].videoId) {
+        rightIdx = Math.floor(Math.random() * allVideos.length);
+      }
+      
+      const pairKey = [allVideos[leftIdx].videoId, allVideos[rightIdx].videoId].sort().join('-');
+      if (usedPairs.has(pairKey)) continue;
+      usedPairs.add(pairKey);
+      
       const question = questions[Math.floor(Math.random() * questions.length)];
       pairs.push({
-        left: shuffled[i * 2],
-        right: shuffled[i * 2 + 1],
+        left: allVideos[leftIdx],
+        right: allVideos[rightIdx],
         question
       });
     }
@@ -132,18 +145,10 @@ const LearnView = ({ month }: LearnViewProps) => {
     setTimeout(() => {
       setShowResult(null);
       setSelectedSide(null);
-      setSwipeDirection(null);
       setRoundIndex(i => (i + 1) % rounds.length);
     }, 1500);
   }, [currentRound, showResult, rounds.length, highStreak]);
 
-  const handleDragEnd = (event: any, info: PanInfo, side: 'left' | 'right') => {
-    const threshold = 100;
-    if (Math.abs(info.offset.x) > threshold) {
-      setSwipeDirection(info.offset.x > 0 ? 'right' : 'left');
-      handleChoice(side);
-    }
-  };
 
   const resetGame = () => {
     setScore(0);
@@ -229,17 +234,8 @@ const LearnView = ({ month }: LearnViewProps) => {
           return (
             <motion.div
               key={side + roundIndex}
-              drag={!showResult ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, info) => handleDragEnd(e, info, side as 'left' | 'right')}
               whileHover={!showResult ? { scale: 1.02 } : {}}
               whileTap={!showResult ? { scale: 0.98 } : {}}
-              animate={
-                isSelected && swipeDirection
-                  ? { x: swipeDirection === 'left' ? -200 : 200, opacity: 0, rotate: swipeDirection === 'left' ? -15 : 15 }
-                  : {}
-              }
               onClick={() => !showResult && handleChoice(side as 'left' | 'right')}
               className={`relative cursor-pointer select-none ${showResult ? 'pointer-events-none' : ''}`}
             >
@@ -324,12 +320,6 @@ const LearnView = ({ month }: LearnViewProps) => {
                 </AnimatePresence>
               </div>
 
-              {/* Swipe hint */}
-              {!showResult && (
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-muted-foreground/50 text-xs">
-                  Tap or swipe
-                </div>
-              )}
             </motion.div>
           );
         })}
