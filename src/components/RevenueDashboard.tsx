@@ -92,17 +92,17 @@ const ProfileCard = ({ name, image, revenueDollars, revenueEuros, sharePercent, 
           <div className="h-24 bg-secondary animate-pulse rounded-lg" />
         ) : (
           <div className="mt-auto">
-            <div className="flex items-baseline gap-3">
-              <p className="font-mono text-4xl lg:text-6xl font-medium text-foreground tracking-tight">
-                <span className="text-primary">$</span>{formattedDollars}
+            <p className="font-mono text-4xl lg:text-6xl font-medium text-foreground tracking-tight">
+              <span className="text-primary">$</span>{formattedDollars}
+            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="font-mono text-lg lg:text-2xl text-muted-foreground">
+                <span className="text-primary/60">€</span>{formattedEuros}
               </p>
               <span className="font-mono text-sm text-muted-foreground">
-                {animatedPercent.toFixed(0)}%
+                ({animatedPercent.toFixed(0)}%)
               </span>
             </div>
-            <p className="font-mono text-lg lg:text-2xl text-muted-foreground mt-3">
-              <span className="text-primary/60">€</span>{formattedEuros}
-            </p>
           </div>
         )}
       </div>
@@ -152,7 +152,7 @@ const RevenueDashboard = ({ month }: RevenueDashboardProps) => {
 
   const headerText = month === 'current' 
     ? 'Revenue from current month' 
-    : 'Revenue from last month';
+    : 'Revenue from last month, updated on the 20th';
 
   return (
     <div className="min-h-[calc(100vh-128px)] flex flex-col items-center px-6 py-12">
