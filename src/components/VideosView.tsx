@@ -250,33 +250,33 @@ const VideosView = ({ month }: VideosViewProps) => {
       <div className="max-w-7xl mx-auto">
         {/* Stats Bar */}
         <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/30">
-          <div className="flex items-center gap-12">
+          <div className="flex items-center gap-8">
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Videos</p>
-              <p className="text-3xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Videos</p>
+              <p className="text-2xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
             </div>
-            <div className="w-px h-12 bg-border/30" />
+            <div className="w-px h-10 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Views</p>
-              <p className="text-3xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Views</p>
+              <p className="text-2xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
             </div>
-            <div className="w-px h-12 bg-border/30" />
+            <div className="w-px h-10 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
-              <p className="text-3xl font-light tracking-tight">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
+              <p className="text-2xl font-light tracking-tight">
                 <span className="text-primary">$</span>
                 <span className="font-mono text-foreground">
                   {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
                 </span>
               </p>
             </div>
-            <div className="w-px h-12 bg-border/30" />
+            <div className="w-px h-10 bg-border/30" />
             <div className="group">
-              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-2 group-hover:text-muted-foreground transition-colors flex items-center gap-1">
+              <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 Avg Views
               </p>
-              <p className="text-3xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
+              <p className="text-2xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
             </div>
           </div>
           
