@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, Clock, Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Users, Calendar } from "lucide-react";
 
 interface SubscriberData {
   subscriberCount: number;
@@ -11,36 +10,12 @@ interface SubscriberData {
   lastUpdated: string | null;
 }
 
-const useCountUp = (end: number, duration: number = 2000) => {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (end === 0) return;
-    
-    let startTime: number | null = null;
-    let animationFrame: number;
-
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const progress = Math.min((currentTime - startTime) / duration, 1);
-      
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(Math.floor(easeOutQuart * end));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
-
-  return count;
-};
-
-const formatNumber = (num: number): string => {
+const formatSubscriberCount = (num: number): string => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(2) + "M";
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + "K";
+  }
   return num.toLocaleString();
 };
 
@@ -56,10 +31,8 @@ const LiveSubscriberCount = ({ daysUntilPayday }: LiveSubscriberCountProps) => {
       if (error) throw error;
       return data as SubscriberData;
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
   });
-
-  const animatedCount = useCountUp(data?.subscriberCount || 0, 2500);
 
   if (isLoading) {
     return (
@@ -113,15 +86,14 @@ const LiveSubscriberCount = ({ daysUntilPayday }: LiveSubscriberCountProps) => {
                 <Users className="w-10 h-10 text-primary" />
                 <div>
                   <span className="text-5xl font-bold text-foreground tracking-tight">
-                    {formatNumber(animatedCount)}
+                    {formatSubscriberCount(data.subscriberCount)}
                   </span>
                   <span className="text-lg text-muted-foreground ml-2">subscribers</span>
                 </div>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="flex items-center gap-2">
-              <Clock className="w-3 h-3" />
-              <span>Updates every hour</span>
+            <TooltipContent side="bottom">
+              <span>Updates every week on Sun</span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
