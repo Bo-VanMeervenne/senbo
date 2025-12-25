@@ -3,6 +3,7 @@ import RevenueDashboard from "@/components/RevenueDashboard";
 import CombinedVideosView from "@/components/CombinedVideosView";
 import GeneralView from "@/components/GeneralView";
 import PasswordGate from "@/components/PasswordGate";
+import DashboardControls from "@/components/DashboardControls";
 
 type Tab = 'general' | 'revenue' | 'videos';
 type MonthTab = 'last' | 'current';
@@ -27,6 +28,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <DashboardControls />
+      
       {/* Minimal Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-center pt-8">
