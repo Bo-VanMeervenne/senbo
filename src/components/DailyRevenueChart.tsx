@@ -271,66 +271,70 @@ const DailyRevenueChart = () => {
     <div className="space-y-4">
       <div className="w-full bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-border/20">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
-                </h3>
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-[200px] text-xs">
-                    {metric === 'revenue' 
-                      ? 'Revenue is delayed 3-5 days. Recent data shown with dashed line.' 
-                      : 'Views are delayed 24-48 hours.'}
-                  </TooltipContent>
-                </UITooltip>
+        <div className="p-4 md:p-6 border-b border-border/20">
+          <div className="flex flex-col gap-4">
+            {/* Title row */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base md:text-lg font-medium text-foreground flex items-center gap-2">
+                    <TrendingUp className="w-4 md:w-5 h-4 md:h-5 text-primary" />
+                    Daily {metric === 'revenue' ? 'Revenue' : 'Views'}
+                  </h3>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[200px] text-xs">
+                      {metric === 'revenue' 
+                        ? 'Revenue is delayed 3-5 days. Recent data shown with dashed line.' 
+                        : 'Views are delayed 24-48 hours.'}
+                    </TooltipContent>
+                  </UITooltip>
+                </div>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                  {filteredData.length} days
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {filteredData.length} days
-              </p>
             </div>
             
-            <div className="flex items-center gap-2">
+            {/* Controls row - scrollable on mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {/* Metric toggle */}
-              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
+              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 flex-shrink-0">
                 <button
                   onClick={() => setMetric('revenue')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1 md:gap-1.5 ${
                     metric === 'revenue'
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <DollarSign className="w-3 h-3" />
-                  Revenue
+                  <span className="hidden sm:inline">Revenue</span>
                 </button>
                 <button
                   onClick={() => setMetric('views')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1 md:gap-1.5 ${
                     metric === 'views'
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Eye className="w-3 h-3" />
-                  Views
+                  <span className="hidden sm:inline">Views</span>
                 </button>
               </div>
               
-              <div className="h-6 w-px bg-border/50" />
+              <div className="h-6 w-px bg-border/50 flex-shrink-0" />
               
               {/* Time filter */}
-              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
+              <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 flex-shrink-0">
                 {(Object.keys(filterLabels) as FilterPreset[]).map((key) => (
                   <button
                     key={key}
                     onClick={() => setFilter(key)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    className={`px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                       filter === key
                         ? 'bg-card text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -344,10 +348,10 @@ const DailyRevenueChart = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="bg-secondary/30 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
-              <p className="font-mono text-xl font-medium text-foreground mt-1">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
+            <div className="bg-secondary/30 rounded-lg p-2.5 md:p-3">
+              <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">Total</p>
+              <p className="font-mono text-lg md:text-xl font-medium text-foreground mt-1">
                 {metric === 'revenue' ? (
                   <>
                     <span className="text-primary">$</span>
@@ -358,9 +362,9 @@ const DailyRevenueChart = () => {
                 )}
               </p>
             </div>
-            <div className="bg-secondary/30 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Daily Avg</p>
-              <p className="font-mono text-xl font-medium text-foreground mt-1">
+            <div className="bg-secondary/30 rounded-lg p-2.5 md:p-3">
+              <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">Daily Avg</p>
+              <p className="font-mono text-lg md:text-xl font-medium text-foreground mt-1">
                 {metric === 'revenue' ? (
                   <>
                     <span className="text-primary">$</span>
@@ -375,7 +379,7 @@ const DailyRevenueChart = () => {
         </div>
 
         {/* Chart */}
-        <div className="p-6 pt-4">
+        <div className="p-4 md:p-6 pt-4">
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart

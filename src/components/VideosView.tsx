@@ -1,7 +1,11 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Coins, Calendar, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp } from "lucide-react";
+import { Search, Coins, Calendar as CalendarIcon, BarChart3, Clock, ThumbsUp, Share2, UserPlus, ChevronDown, ChevronUp, Play, TrendingUp } from "lucide-react";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import VideoStatsDialog from "./VideoStatsDialog";
 
 interface Video {
@@ -148,6 +152,11 @@ const VideosSkeleton = () => (
 
 type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
 
+interface DateRange {
+  from: Date;
+  to: Date;
+}
+
 interface VideosViewProps {
   month: 'last' | 'current';
 }
@@ -158,6 +167,30 @@ const VideosView = ({ month }: VideosViewProps) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
+  
+  // Date range based on month tab
+  const getDefaultDateRange = (): DateRange => {
+    const now = new Date();
+    if (month === 'current') {
+      return {
+        from: startOfMonth(now),
+        to: now,
+      };
+    } else {
+      const lastMonth = subMonths(now, 1);
+      return {
+        from: startOfMonth(lastMonth),
+        to: endOfMonth(lastMonth),
+      };
+    }
+  };
+  
+  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
+
+  // Reset date range when month changes
+  useMemo(() => {
+    setDateRange(getDefaultDateRange());
+  }, [month]);
 
   const { data: videos, isLoading, isError } = useQuery({
     queryKey: ['videos', month],
@@ -246,89 +279,90 @@ const VideosView = ({ month }: VideosViewProps) => {
   }, [videos, totalViews]);
 
   return (
-    <div className="min-h-[calc(100vh-128px)] px-6 py-8">
+    <div className="min-h-[calc(100vh-128px)] px-4 md:px-6 py-6 md:py-8">
       <div className="max-w-7xl mx-auto">
         {/* Stats Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-border/30">
-          <div className="flex items-center gap-8">
-            <div className="group">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 mb-8 md:mb-10 pb-6 md:pb-8 border-b border-border/30">
+          {/* Stats - horizontal scroll on mobile */}
+          <div className="flex items-center gap-4 md:gap-8 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+            <div className="group flex-shrink-0">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Videos</p>
-              <p className="text-2xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
+              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{videos?.length || 0}</p>
             </div>
-            <div className="w-px h-10 bg-border/30" />
-            <div className="group">
+            <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
+            <div className="group flex-shrink-0">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Views</p>
-              <p className="text-2xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
+              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{formatViews(totalViews)}</p>
             </div>
-            <div className="w-px h-10 bg-border/30" />
-            <div className="group">
+            <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
+            <div className="group flex-shrink-0">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors">Total Revenue</p>
-              <p className="text-2xl font-light tracking-tight">
+              <p className="text-xl md:text-2xl font-light tracking-tight">
                 <span className="text-primary">$</span>
                 <span className="font-mono text-foreground">
                   {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalRevenue)}
                 </span>
               </p>
             </div>
-            <div className="w-px h-10 bg-border/30" />
-            <div className="group">
+            <div className="w-px h-8 md:h-10 bg-border/30 flex-shrink-0" />
+            <div className="group flex-shrink-0">
               <p className="text-muted-foreground/70 text-[10px] uppercase tracking-[0.2em] mb-1 group-hover:text-muted-foreground transition-colors flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 Avg Views
               </p>
-              <p className="text-2xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
+              <p className="text-xl md:text-2xl font-light text-foreground tracking-tight">{formatViews(avgViewsPerVideo)}</p>
             </div>
           </div>
           
-          {/* Controls */}
-          <div className="flex items-center gap-2">
+          {/* Controls - wrap on mobile */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setSortBy(sortBy === 'newest' ? 'oldest' : 'newest')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
+              className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm rounded-xl border transition-all duration-300 ${
                 sortBy === 'newest' || sortBy === 'oldest'
                   ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]'
                   : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
-              <Calendar className="w-4 h-4" />
-              {sortBy === 'oldest' ? 'Oldest' : 'Newest'}
+              <CalendarIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">{sortBy === 'oldest' ? 'Oldest' : 'Newest'}</span>
             </button>
             
             <button
               onClick={() => setSortBy(sortBy === 'revenue' ? 'newest' : 'revenue')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
+              className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm rounded-xl border transition-all duration-300 ${
                 sortBy === 'revenue'
                   ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]'
                   : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
               <Coins className="w-4 h-4" />
-              Revenue
+              <span className="hidden sm:inline">Revenue</span>
             </button>
 
             {/* Advanced filters toggle */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border transition-all duration-300 ${
+              className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm rounded-xl border transition-all duration-300 ${
                 showAdvanced
                   ? 'bg-card text-foreground border-border'
                   : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card/50'
               }`}
             >
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              More
+              <span className="hidden sm:inline">More</span>
             </button>
 
-            <div className="w-px h-8 bg-border/30 mx-1" />
+            <div className="w-px h-6 md:h-8 bg-border/30 mx-1 hidden sm:block" />
 
-            <div className="relative group">
+            <div className="relative group w-full sm:w-auto mt-2 sm:mt-0">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-40 pl-10 pr-4 py-2.5 bg-transparent border border-border/50 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-card/50 transition-all duration-300"
+                className="w-full sm:w-40 pl-10 pr-4 py-2 md:py-2.5 bg-transparent border border-border/50 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-card/50 transition-all duration-300"
               />
             </div>
           </div>
@@ -336,7 +370,7 @@ const VideosView = ({ month }: VideosViewProps) => {
 
         {/* Advanced Filters */}
         {showAdvanced && (
-          <div className="flex flex-wrap gap-2 mb-6 -mt-4 animate-fade-in">
+          <div className="flex flex-wrap gap-2 mb-6 -mt-2 md:-mt-4 animate-fade-in">
             {[
               { key: 'views', label: 'Views', icon: null },
               { key: 'watchTime', label: 'Watch Time', icon: Clock },
@@ -358,6 +392,39 @@ const VideosView = ({ month }: VideosViewProps) => {
                 {label}
               </button>
             ))}
+            
+            {/* Date Range Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300"
+                >
+                  <CalendarIcon className="w-3 h-3" />
+                  {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-card border-border z-50" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range) => {
+                    if (range?.from && range?.to) {
+                      setDateRange({ from: range.from, to: range.to });
+                    } else if (range?.from) {
+                      setDateRange({ from: range.from, to: range.from });
+                    }
+                  }}
+                  numberOfMonths={1}
+                  disabled={(date) => {
+                    const defaultRange = getDefaultDateRange();
+                    return date < defaultRange.from || date > defaultRange.to;
+                  }}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         )}
 
