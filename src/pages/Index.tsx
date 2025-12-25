@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import RevenueDashboard from "@/components/RevenueDashboard";
 import CombinedVideosView from "@/components/CombinedVideosView";
 import GeneralView from "@/components/GeneralView";
+import LearnView from "@/components/LearnView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'general' | 'revenue' | 'videos';
+type Tab = 'general' | 'revenue' | 'videos' | 'learn';
 type MonthTab = 'last' | 'current';
 type SourceFilter = 'all' | 'senbo' | 'senne';
 
@@ -24,6 +25,8 @@ const Index = () => {
   if (!isAuthenticated) {
     return <PasswordGate onSuccess={() => setIsAuthenticated(true)} />;
   }
+
+  const showSubFilters = activeTab === 'revenue' || activeTab === 'videos';
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,11 +64,21 @@ const Index = () => {
             >
               Videos
             </button>
+            <button
+              onClick={() => setActiveTab('learn')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                activeTab === 'learn' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Learn
+            </button>
           </div>
         </div>
 
         {/* Sub-filters */}
-        {activeTab !== 'general' && (
+        {showSubFilters && (
           <div className="flex justify-center mt-3 gap-3">
             {/* Month toggle */}
             <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
@@ -131,13 +144,15 @@ const Index = () => {
       </nav>
 
       {/* Content */}
-      <div className={activeTab === 'general' ? 'pt-24' : 'pt-32'}>
+      <div className={showSubFilters ? 'pt-32' : 'pt-24'}>
         {activeTab === 'general' ? (
           <GeneralView />
         ) : activeTab === 'revenue' ? (
           <RevenueDashboard month={monthTab} />
-        ) : (
+        ) : activeTab === 'videos' ? (
           <CombinedVideosView month={monthTab} sourceFilter={sourceFilter} />
+        ) : (
+          <LearnView month={monthTab} />
         )}
       </div>
     </div>
