@@ -38,8 +38,8 @@ serve(async (req) => {
     
     const senboRange = encodeURIComponent(`${senboSheetName}!A2:O500`);
     const senneRange = encodeURIComponent(`${senneSheetName}!A2:N500`);
-    // Summary: C2 = Total Views for SenBo, H2 = Bo's revenue in USD
-    const summaryRange = encodeURIComponent(`${summarySheetName}!C2:H2`);
+    // Summary: C2 = Total Views for SenBo, H2 = Bo revenue (SenBo), I2 = Senne revenue
+    const summaryRange = encodeURIComponent(`${summarySheetName}!C2:I2`);
     
     const senboUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${senboRange}?key=${apiKey}`;
     const senneUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${senneRange}?key=${apiKey}`;
@@ -164,23 +164,26 @@ serve(async (req) => {
 
     const combinedVideos = Array.from(videoMap.values());
 
-    // Parse Summary data for SenBo totals
-    // Summary row: C2=Total Views, H2=Bo Revenue USD
-    // SenBo total revenue = Bo's revenue × 2
+    // Parse Summary data for totals
+    // Summary range starts at C: [C2, D2, E2, F2, G2, H2, I2]
+    // C2 = Total SenBo views
+    // H2 = SenBo revenue (Bo)
+    // I2 = Senne revenue
     let senboSummaryRevenue = 0;
     let senboSummaryViews = 0;
+    let senneSummaryRevenue: number | null = null;
     
     if (summaryData.values && summaryData.values[0]) {
       const summaryRow = summaryData.values[0];
-      // C2 is index 0 (since we start from C), H2 is index 5
       senboSummaryViews = parseViews(summaryRow[0] || '0');
-      const boRevenue = parseAmount(summaryRow[5] || '0'); // H column = Bo's revenue
-      senboSummaryRevenue = boRevenue * 2; // Total SenBo revenue = Bo × 2
-      console.log(`Summary: SenBo Views=${senboSummaryViews}, Bo Revenue=$${boRevenue}, SenBo Total=$${senboSummaryRevenue}`);
+      senboSummaryRevenue = parseAmount(summaryRow[5] || '0');
+      senneSummaryRevenue = parseAmount(summaryRow[6] || '0');
+      console.log(`Summary: SenBo Views=${senboSummaryViews}, SenBo Revenue=$${senboSummaryRevenue}, Senne Revenue=$${senneSummaryRevenue}`);
     }
 
-    // Calculate Senne totals from individual videos (sum of column F)
-    const senneTotalRevenue = senneVideos.reduce((sum: number, v: any) => sum + v.revenue, 0);
+    // Calculate Senne totals
+    // Prefer Summary (matches the Revenue Split / earnings), fall back to summing video rows if missing
+    const senneTotalRevenue = (senneSummaryRevenue ?? senneVideos.reduce((sum: number, v: any) => sum + v.revenue, 0));
     const senneTotalViews = senneVideos.reduce((sum: number, v: any) => sum + v.views, 0);
 
     console.log(`Parsed ${senboVideos.length} Senne & Bo + ${senneVideos.length} Senne Only = ${combinedVideos.length} total videos`);
