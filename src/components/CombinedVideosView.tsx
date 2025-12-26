@@ -136,10 +136,14 @@ const VideoCard = ({
         </div>
 
         {/* Outlier badge */}
-        {isOutlier && outlierMultiplier && (
-          <div className="absolute top-12 left-3 px-2 py-1 bg-yellow-500 text-black backdrop-blur-md rounded-lg flex items-center gap-1">
+        {isOutlier && outlierMultiplier !== undefined && (
+          <div className={`absolute top-12 left-3 px-2 py-1 backdrop-blur-md rounded-lg flex items-center gap-1 ${
+            outlierMultiplier >= 1 
+              ? 'bg-emerald-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
             <Zap className="w-3 h-3" />
-            <span className="text-[10px] font-bold">{outlierMultiplier.toFixed(1)}x</span>
+            <span className="text-[10px] font-bold">{(outlierMultiplier * 100).toFixed(0)}%</span>
           </div>
         )}
 
@@ -179,7 +183,7 @@ const VideosSkeleton = () => (
   </div>
 );
 
-type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
+type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'outlier' | 'none';
 type SourceFilter = 'all' | 'senbo' | 'senne';
 
 interface DateRange {
@@ -202,7 +206,8 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
   const [statsOpen, setStatsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(VIDEOS_PER_PAGE);
   const [showOutliers, setShowOutliers] = useState(false);
-  const [outlierThreshold, setOutlierThreshold] = useState(2);
+  const [outlierMin, setOutlierMin] = useState(0);
+  const [outlierMax, setOutlierMax] = useState(100);
 
   // Date range based on month tab
   const getDefaultDateRange = (): DateRange => {
@@ -242,6 +247,27 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
   const handleStatsClick = (video: Video) => {
     setSelectedVideo(video);
     setStatsOpen(true);
+  };
+
+  // Helper function to calculate outlier multiplier for a video
+  const calculateOutlierMultiplier = (video: Video, allVideos: Video[], parseDate: (d: string) => Date): number => {
+    const chronologicalVideos = [...allVideos].sort(
+      (a, b) => parseDate(a.publishDate).getTime() - parseDate(b.publishDate).getTime()
+    );
+    
+    const index = chronologicalVideos.findIndex(v => (v.videoId || v.title) === (video.videoId || video.title));
+    if (index === -1) return 1;
+    
+    const start = Math.max(0, index - 5);
+    const end = Math.min(chronologicalVideos.length, index + 6);
+    const surrounding = chronologicalVideos.slice(start, end).filter((_, i) => start + i !== index);
+    
+    if (surrounding.length === 0) return 1;
+    
+    const avgSurrounding = surrounding.reduce((sum, v) => sum + v.views, 0) / surrounding.length;
+    if (avgSurrounding === 0) return 1;
+    
+    return video.views / avgSurrounding;
   };
 
   const filteredAndSortedVideos = useMemo(() => {
@@ -296,6 +322,15 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       return parseInt(parts[0] || '0') * 60 + parseInt(parts[1] || '0');
     };
 
+    // Pre-calculate outlier multipliers for sorting
+    const outlierMultipliers = new Map<string, number>();
+    if (sortBy === 'outlier') {
+      result.forEach(video => {
+        const multiplier = calculateOutlierMultiplier(video, result, parseDate);
+        outlierMultipliers.set(video.videoId || video.title, multiplier);
+      });
+    }
+
     switch (sortBy) {
       case 'newest':
         result.sort((a, b) => parseDate(b.publishDate).getTime() - parseDate(a.publishDate).getTime());
@@ -323,6 +358,13 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
         break;
       case 'duration':
         result.sort((a, b) => parseDuration(b.avgDuration) - parseDuration(a.avgDuration));
+        break;
+      case 'outlier':
+        result.sort((a, b) => {
+          const multA = outlierMultipliers.get(a.videoId || a.title) || 1;
+          const multB = outlierMultipliers.get(b.videoId || b.title) || 1;
+          return multB - multA; // Highest multipliers first
+        });
         break;
     }
     
@@ -369,14 +411,19 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       
       const avgSurrounding = surrounding.reduce((sum, v) => sum + v.views, 0) / surrounding.length;
       
-      if (avgSurrounding > 0 && video.views >= avgSurrounding * outlierThreshold) {
+      if (avgSurrounding > 0) {
         const multiplier = video.views / avgSurrounding;
-        outliers.set(video.videoId || video.title, multiplier);
+        // Check if within min/max range (convert to multiplier: 0 = 0x, 100 = 1x, 200 = 2x)
+        const minMultiplier = outlierMin / 100;
+        const maxMultiplier = outlierMax / 100;
+        if (multiplier >= minMultiplier && multiplier <= maxMultiplier) {
+          outliers.set(video.videoId || video.title, multiplier);
+        }
       }
     });
     
     return outliers;
-  }, [filteredAndSortedVideos, outlierThreshold]);
+  }, [filteredAndSortedVideos, outlierMin, outlierMax]);
 
   return (
     <div className="min-h-[calc(100vh-128px)] px-4 md:px-6 py-6 md:py-8">
@@ -493,6 +540,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
               { key: 'shares', label: 'Shares', icon: Share2 },
               { key: 'subsGained', label: 'Subs', icon: UserPlus },
               { key: 'duration', label: 'Duration', icon: Play },
+              { key: 'outlier', label: 'Outlier', icon: Zap },
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -554,18 +602,30 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
               Outliers
             </button>
 
-            {/* Outlier Threshold Input */}
+            {/* Outlier Threshold Inputs */}
             {showOutliers && (
               <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Min</span>
                 <input
                   type="number"
-                  min={1}
-                  max={100}
-                  value={outlierThreshold}
-                  onChange={(e) => setOutlierThreshold(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                  min={0}
+                  max={1000}
+                  value={outlierMin}
+                  onChange={(e) => setOutlierMin(Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-14 px-2 py-2 text-xs text-center bg-transparent border border-border/50 rounded-lg text-foreground focus:outline-none focus:border-yellow-500/50 transition-all"
                 />
-                <span className="text-xs text-muted-foreground">x avg</span>
+                <span className="text-xs text-muted-foreground">%</span>
+                <span className="text-xs text-muted-foreground mx-1">–</span>
+                <span className="text-xs text-muted-foreground">Max</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={10000}
+                  value={outlierMax}
+                  onChange={(e) => setOutlierMax(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-16 px-2 py-2 text-xs text-center bg-transparent border border-border/50 rounded-lg text-foreground focus:outline-none focus:border-yellow-500/50 transition-all"
+                />
+                <span className="text-xs text-muted-foreground">%</span>
               </div>
             )}
           </div>
