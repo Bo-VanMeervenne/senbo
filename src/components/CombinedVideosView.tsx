@@ -179,7 +179,7 @@ const VideosSkeleton = () => (
   </div>
 );
 
-type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none';
+type SortOption = 'newest' | 'oldest' | 'views' | 'revenue' | 'watchTime' | 'likes' | 'shares' | 'subsGained' | 'duration' | 'none' | 'bestOutliers' | 'worstPerformers';
 type SourceFilter = 'all' | 'senbo' | 'senne';
 
 interface DateRange {
@@ -202,7 +202,6 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
   const [statsOpen, setStatsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(VIDEOS_PER_PAGE);
   const [showOutliers, setShowOutliers] = useState(false);
-  const [outlierThreshold, setOutlierThreshold] = useState(2);
 
   // Date range based on month tab
   const getDefaultDateRange = (): DateRange => {
@@ -342,9 +341,9 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
     return Math.round(totalViews / filteredAndSortedVideos.length);
   }, [filteredAndSortedVideos, totalViews]);
 
-  // Calculate outlier status for each video based on surrounding 5 before and 5 after
+  // Calculate outlier ratio for each video based on surrounding 5 before and 5 after
   const outlierData = useMemo(() => {
-    const outliers = new Map<string, number>();
+    const outlierRatios = new Map<string, number>();
     
     // We need chronologically sorted videos for this calculation
     const parseDate = (d: string) => {
@@ -355,6 +354,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(min));
     };
     
+    // Get all videos sorted chronologically for ratio calculation
     const chronologicalVideos = [...filteredAndSortedVideos].sort(
       (a, b) => parseDate(a.publishDate).getTime() - parseDate(b.publishDate).getTime()
     );
@@ -369,14 +369,32 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
       
       const avgSurrounding = surrounding.reduce((sum, v) => sum + v.views, 0) / surrounding.length;
       
-      if (avgSurrounding > 0 && video.views >= avgSurrounding * outlierThreshold) {
+      if (avgSurrounding > 0) {
         const multiplier = video.views / avgSurrounding;
-        outliers.set(video.videoId || video.title, multiplier);
+        outlierRatios.set(video.videoId || video.title, multiplier);
       }
     });
     
-    return outliers;
-  }, [filteredAndSortedVideos, outlierThreshold]);
+    return outlierRatios;
+  }, [filteredAndSortedVideos]);
+
+  // Sort videos by outlier ratio when those sort options are selected
+  const displayVideos = useMemo(() => {
+    if (sortBy === 'bestOutliers') {
+      return [...filteredAndSortedVideos].sort((a, b) => {
+        const aRatio = outlierData.get(a.videoId || a.title) || 0;
+        const bRatio = outlierData.get(b.videoId || b.title) || 0;
+        return bRatio - aRatio;
+      });
+    } else if (sortBy === 'worstPerformers') {
+      return [...filteredAndSortedVideos].sort((a, b) => {
+        const aRatio = outlierData.get(a.videoId || a.title) || Infinity;
+        const bRatio = outlierData.get(b.videoId || b.title) || Infinity;
+        return aRatio - bRatio;
+      });
+    }
+    return filteredAndSortedVideos;
+  }, [filteredAndSortedVideos, sortBy, outlierData]);
 
   return (
     <div className="min-h-[calc(100vh-128px)] px-4 md:px-6 py-6 md:py-8">
@@ -541,33 +559,36 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
 
             <div className="w-px h-6 bg-border/30 mx-1" />
 
-            {/* Outlier Toggle */}
+            {/* Outlier Sort Options */}
             <button
-              onClick={() => setShowOutliers(!showOutliers)}
+              onClick={() => {
+                setSortBy(sortBy === 'bestOutliers' ? 'newest' : 'bestOutliers');
+                setShowOutliers(sortBy !== 'bestOutliers');
+              }}
               className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all duration-300 ${
-                showOutliers
+                sortBy === 'bestOutliers'
                   ? 'bg-yellow-500 text-black border-yellow-500'
                   : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-yellow-500/50'
               }`}
             >
               <Zap className="w-3 h-3" />
-              Outliers
+              Best Outliers
             </button>
 
-            {/* Outlier Threshold Input */}
-            {showOutliers && (
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={outlierThreshold}
-                  onChange={(e) => setOutlierThreshold(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
-                  className="w-14 px-2 py-2 text-xs text-center bg-transparent border border-border/50 rounded-lg text-foreground focus:outline-none focus:border-yellow-500/50 transition-all"
-                />
-                <span className="text-xs text-muted-foreground">x avg</span>
-              </div>
-            )}
+            <button
+              onClick={() => {
+                setSortBy(sortBy === 'worstPerformers' ? 'newest' : 'worstPerformers');
+                setShowOutliers(sortBy !== 'worstPerformers');
+              }}
+              className={`flex items-center gap-2 px-3 py-2 text-xs rounded-lg border transition-all duration-300 ${
+                sortBy === 'worstPerformers'
+                  ? 'bg-red-500 text-white border-red-500'
+                  : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-red-500/50'
+              }`}
+            >
+              <Zap className="w-3 h-3" />
+              Worst Performers
+            </button>
           </div>
         )}
 
@@ -581,7 +602,7 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-              {filteredAndSortedVideos.slice(0, visibleCount).map((video, index) => {
+              {displayVideos.slice(0, visibleCount).map((video, index) => {
                 const videoKey = video.videoId || video.title;
                 const multiplier = outlierData.get(videoKey);
                 const isOutlier = showOutliers && multiplier !== undefined;
@@ -600,13 +621,13 @@ const CombinedVideosView = ({ month, sourceFilter }: CombinedVideosViewProps) =>
             </div>
             
             {/* Load More Button */}
-            {visibleCount < filteredAndSortedVideos.length && (
+            {visibleCount < displayVideos.length && (
               <div className="flex justify-center mt-8">
                 <button
                   onClick={() => setVisibleCount(prev => prev + VIDEOS_PER_PAGE)}
                   className="px-6 py-3 bg-card border border-border/50 rounded-xl text-sm font-medium text-foreground hover:border-primary/50 hover:bg-card/80 transition-all duration-300"
                 >
-                  Load More ({filteredAndSortedVideos.length - visibleCount} remaining)
+                  Load More ({displayVideos.length - visibleCount} remaining)
                 </button>
               </div>
             )}
