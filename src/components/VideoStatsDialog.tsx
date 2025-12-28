@@ -38,6 +38,21 @@ const formatMinutesWatched = (minutes: number): string => {
   return formatNumber(minutes);
 };
 
+// Format duration to round seconds and add 's' suffix for short durations
+const formatDuration = (duration: string): string => {
+  if (!duration) return '0s';
+  const parts = duration.split(':');
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0]);
+    const seconds = Math.round(parseFloat(parts[1]));
+    if (minutes === 0) {
+      return `${seconds}s`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  return duration;
+};
+
 const StatCard = ({ 
   icon: Icon, 
   label, 
@@ -141,7 +156,7 @@ const VideoStatsDialog = ({ video, open, onOpenChange }: VideoStatsDialogProps) 
           <StatCard 
             icon={Play} 
             label="Duration" 
-            value={video.avgDuration || '0:00'}
+            value={formatDuration(video.avgDuration)}
           />
           <StatCard 
             icon={ThumbsUp} 
