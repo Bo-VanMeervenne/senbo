@@ -448,7 +448,7 @@ export const ReelsView = () => {
             onClick={() => setSortBy(sortBy === 'views' ? 'dateDesc' : 'views')}
             className={cn(
               "h-9 gap-1.5 transition-all",
-              sortBy === 'views' && "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground"
+              sortBy === 'views' && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
             )}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -462,7 +462,7 @@ export const ReelsView = () => {
             onClick={() => setSortBy(sortBy === 'likes' ? 'dateDesc' : 'likes')}
             className={cn(
               "h-9 gap-1.5 transition-all",
-              sortBy === 'likes' && "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground"
+              sortBy === 'likes' && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
             )}
           >
             <Heart className={cn("w-3.5 h-3.5", sortBy === 'likes' && "fill-current")} />
