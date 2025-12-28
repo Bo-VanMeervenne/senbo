@@ -56,6 +56,7 @@ interface ReelCardProps {
 }
 
 const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
+  const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
     if (reel.url) {
@@ -63,24 +64,25 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
     }
   };
 
-  const thumbnailSrc = reel.thumbnailUrl || '';
-
   return (
     <div
       onClick={handleClick}
       className="group relative bg-card rounded-xl overflow-hidden border border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-[9/16] overflow-hidden">
-        {thumbnailSrc ? (
+      <div className="relative aspect-[9/16] overflow-hidden bg-muted">
+        {reel.thumbnailUrl && !imageError ? (
           <img
-            src={thumbnailSrc}
+            src={reel.thumbnailUrl}
             alt={reel.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => setImageError(true)}
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
-            No thumbnail
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">
+            {reel.title?.slice(0, 50) || 'No thumbnail'}
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
