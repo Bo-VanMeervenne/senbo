@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, SlidersHorizontal, ArrowUpDown, Heart, Eye, Zap, X } from "lucide-react";
+import { Search, SlidersHorizontal, Heart, Eye, Zap, X, Clock, MessageCircle, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { format, parse, isAfter, isBefore, isValid } from "date-fns";
 
 const THUMB_PROXY_BASE = "https://qxtnpwmdspwidrtiqimv.supabase.co/functions/v1/ig-thumbnail-proxy";
@@ -163,7 +163,7 @@ const ReelsSkeleton = () => (
   </div>
 );
 
-type SortOption = 'date' | 'views' | 'likes' | 'comments' | 'duration' | 'bestOutliers';
+type SortOption = 'dateDesc' | 'dateAsc' | 'views' | 'likes' | 'comments' | 'duration' | 'bestOutliers';
 
 interface DateRange {
   from: Date | undefined;
@@ -172,12 +172,13 @@ interface DateRange {
 
 export const ReelsView = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('date');
+  const [sortBy, setSortBy] = useState<SortOption>('dateDesc');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
-  const [creatorFilter, setCreatorFilter] = useState<string>('all');
+  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
   const [showOutliers, setShowOutliers] = useState(false);
   const [displayCount, setDisplayCount] = useState(30);
+  const [creatorDropdownOpen, setCreatorDropdownOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['ig-reels'],
@@ -236,8 +237,8 @@ export const ReelsView = () => {
         return false;
       }
 
-      // Creator filter
-      if (creatorFilter !== 'all' && reel.creator !== creatorFilter) {
+      // Multi-creator filter
+      if (selectedCreators.length > 0 && !selectedCreators.includes(reel.creator)) {
         return false;
       }
 
@@ -294,7 +295,14 @@ export const ReelsView = () => {
           return ratioB - ratioA;
         });
         break;
-      case 'date':
+      case 'dateAsc':
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.publishDate);
+          const dateB = new Date(b.publishDate);
+          return dateA.getTime() - dateB.getTime();
+        });
+        break;
+      case 'dateDesc':
       default:
         filtered.sort((a, b) => {
           const dateA = new Date(a.publishDate);
@@ -305,7 +313,7 @@ export const ReelsView = () => {
     }
 
     return filtered;
-  }, [data?.reels, searchQuery, creatorFilter, dateRange, sortBy, outlierData]);
+  }, [data?.reels, searchQuery, selectedCreators, dateRange, sortBy, outlierData]);
 
   // Display reels (with outlier filter applied)
   const displayReels = useMemo(() => {
@@ -333,77 +341,121 @@ export const ReelsView = () => {
     );
   }
 
+  const addCreator = (creator: string) => {
+    if (!selectedCreators.includes(creator)) {
+      setSelectedCreators([...selectedCreators, creator]);
+    }
+    setCreatorDropdownOpen(false);
+  };
+
+  const removeCreator = (creator: string) => {
+    setSelectedCreators(selectedCreators.filter(c => c !== creator));
+  };
+
+  const availableCreators = creators.filter(c => !selectedCreators.includes(c));
+
   return (
     <div className="p-4 md:p-6 max-w-[1800px] mx-auto">
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Creator filter */}
-        <Select value={creatorFilter} onValueChange={setCreatorFilter}>
-          <SelectTrigger className="w-[160px] h-9">
-            <SelectValue placeholder="All Creators" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Creators</SelectItem>
-            {creators.map(creator => (
-              <SelectItem key={creator} value={creator}>{creator}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        {/* Left side: Creator filter + Search */}
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          {/* Creator multi-select dropdown */}
+          <Popover open={creatorDropdownOpen} onOpenChange={setCreatorDropdownOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                Creators
+                <ChevronDown className="w-3.5 h-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2 bg-popover" align="start">
+              <div className="max-h-60 overflow-y-auto space-y-1">
+                {availableCreators.length === 0 ? (
+                  <div className="text-sm text-muted-foreground px-2 py-1">All creators selected</div>
+                ) : (
+                  availableCreators.map(creator => (
+                    <button
+                      key={creator}
+                      onClick={() => addCreator(creator)}
+                      className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+                    >
+                      {creator}
+                    </button>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        {/* Sort dropdown */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-2">
-              <ArrowUpDown className="w-3.5 h-3.5" />
-              Sort
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2 bg-popover" align="start">
-            <div className="space-y-1">
-              {[
-                { value: 'date', label: 'Newest' },
-                { value: 'views', label: 'Most Views' },
-                { value: 'likes', label: 'Most Likes' },
-                { value: 'comments', label: 'Most Comments' },
-                { value: 'duration', label: 'Longest' },
-              ].map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => setSortBy(option.value as SortOption)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                    sortBy === option.value 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-muted'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+          {/* Selected creator tags */}
+          {selectedCreators.map(creator => (
+            <span
+              key={creator}
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-destructive text-destructive-foreground cursor-pointer hover:bg-destructive/80 transition-colors"
+              onClick={() => removeCreator(creator)}
+            >
+              {creator}
+              <X className="w-3 h-3" />
+            </span>
+          ))}
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search titles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 w-[200px]"
-          />
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search titles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 w-[180px]"
+            />
+          </div>
         </div>
 
-        {/* Advanced toggle */}
-        <Button
-          variant={showAdvanced ? "secondary" : "outline"}
-          size="sm"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="h-9 gap-2"
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          Advanced
-        </Button>
+        {/* Right side: Quick sort buttons */}
+        <div className="flex items-center gap-1">
+          {/* Newest/Oldest toggle */}
+          <Button
+            variant={sortBy === 'dateDesc' || sortBy === 'dateAsc' ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSortBy(sortBy === 'dateDesc' ? 'dateAsc' : 'dateDesc')}
+            className="h-9 gap-1.5"
+          >
+            {sortBy === 'dateAsc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+            {sortBy === 'dateAsc' ? 'Oldest' : 'Newest'}
+          </Button>
+
+          {/* Views sort */}
+          <Button
+            variant={sortBy === 'views' ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('views')}
+            className="h-9 gap-1.5"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Views
+          </Button>
+
+          {/* Likes sort */}
+          <Button
+            variant={sortBy === 'likes' ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('likes')}
+            className="h-9 gap-1.5"
+          >
+            <Heart className="w-3.5 h-3.5" />
+            Likes
+          </Button>
+
+          {/* Advanced toggle */}
+          <Button
+            variant={showAdvanced ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="h-9 gap-1.5"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Advanced filters */}
@@ -412,18 +464,20 @@ export const ReelsView = () => {
           {/* Date range */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <Clock className="w-3.5 h-3.5" />
                 {dateRange.from || dateRange.to 
                   ? `${dateRange.from ? format(dateRange.from, 'MMM d') : '...'} - ${dateRange.to ? format(dateRange.to, 'MMM d') : '...'}`
                   : 'Date Range'}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-popover" align="start">
+            <PopoverContent className="w-auto p-0 bg-popover pointer-events-auto" align="start">
               <Calendar
                 mode="range"
                 selected={{ from: dateRange.from, to: dateRange.to }}
                 onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
                 numberOfMonths={2}
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -436,9 +490,31 @@ export const ReelsView = () => {
               className="h-9"
             >
               <X className="w-4 h-4 mr-1" />
-              Clear dates
+              Clear
             </Button>
           ) : null}
+
+          {/* Comments sort */}
+          <Button
+            variant={sortBy === 'comments' ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('comments')}
+            className="h-9 gap-1.5"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Most Comments
+          </Button>
+
+          {/* Duration sort */}
+          <Button
+            variant={sortBy === 'duration' ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('duration')}
+            className="h-9 gap-1.5"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            Longest
+          </Button>
 
           {/* Outlier filter */}
           <Button
@@ -450,7 +526,7 @@ export const ReelsView = () => {
               }
               setShowOutliers(!showOutliers);
             }}
-            className={`h-9 gap-2 ${showOutliers ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : ''}`}
+            className={cn("h-9 gap-1.5", showOutliers && "bg-yellow-500 hover:bg-yellow-600 text-black")}
           >
             <Zap className="w-3.5 h-3.5" />
             Best Outliers
