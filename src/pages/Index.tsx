@@ -3,9 +3,10 @@ import RevenueDashboard from "@/components/RevenueDashboard";
 import CombinedVideosView from "@/components/CombinedVideosView";
 import GeneralView from "@/components/GeneralView";
 import LearnView from "@/components/LearnView";
+import ReelsView from "@/components/ReelsView";
 import PasswordGate from "@/components/PasswordGate";
 
-type Tab = 'general' | 'revenue' | 'videos' | 'learn';
+type Tab = 'general' | 'revenue' | 'videos' | 'learn' | 'reels';
 type MonthTab = 'last' | 'current';
 type SourceFilter = 'all' | 'senbo' | 'senne';
 type MetricFilter = 'all' | 'revenue' | 'views';
@@ -30,6 +31,7 @@ const Index = () => {
 
   const showSubFilters = activeTab === 'revenue' || activeTab === 'videos' || activeTab === 'learn';
   const showSourceFilter = activeTab === 'videos' || activeTab === 'learn';
+  const isReelsTab = activeTab === 'reels';
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,6 +78,16 @@ const Index = () => {
               }`}
             >
               Learn
+            </button>
+            <button
+              onClick={() => setActiveTab('reels')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                activeTab === 'reels' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Reels
             </button>
           </div>
         </div>
@@ -183,15 +195,17 @@ const Index = () => {
       </nav>
 
       {/* Content */}
-      <div className={showSubFilters ? 'pt-32' : 'pt-24'}>
+      <div className={showSubFilters ? 'pt-32' : isReelsTab ? 'pt-24' : 'pt-24'}>
         {activeTab === 'general' ? (
           <GeneralView />
         ) : activeTab === 'revenue' ? (
           <RevenueDashboard month={monthTab} />
         ) : activeTab === 'videos' ? (
           <CombinedVideosView month={monthTab} sourceFilter={sourceFilter} />
-        ) : (
+        ) : activeTab === 'learn' ? (
           <LearnView month={monthTab} sourceFilter={sourceFilter} metricFilter={metricFilter} />
+        ) : (
+          <ReelsView />
         )}
       </div>
     </div>
