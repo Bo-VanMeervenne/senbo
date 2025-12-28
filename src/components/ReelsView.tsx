@@ -63,6 +63,23 @@ const formatShortDate = (dateStr: string): string => {
   return `${parseInt(day)} ${monthName}`;
 };
 
+// Format duration to round seconds and add 's' suffix
+const formatDuration = (duration: string): string => {
+  if (!duration) return '';
+  // Handle format like "0:45.123" or "1:23.456" or "0:45" or "1:23"
+  const parts = duration.split(':');
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0]);
+    const secondsWithDecimal = parseFloat(parts[1]);
+    const seconds = Math.round(secondsWithDecimal);
+    if (minutes === 0) {
+      return `${seconds}s`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  return duration;
+};
+
 interface ReelCardProps {
   reel: Reel;
   isOutlier: boolean;
@@ -131,7 +148,7 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
         {reel.duration && (
           <div className="absolute bottom-12 right-2">
             <span className="text-[10px] text-white/80 bg-black/50 px-1.5 py-0.5 rounded">
-              {reel.duration}
+              {formatDuration(reel.duration)}
             </span>
           </div>
         )}
@@ -487,39 +504,6 @@ export const ReelsView = () => {
       {/* Advanced filters */}
       {showAdvanced && (
         <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-card/50 rounded-lg border border-border/50">
-          {/* Date range */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                {dateRange.from || dateRange.to 
-                  ? `${dateRange.from ? format(dateRange.from, 'MMM d') : '...'} - ${dateRange.to ? format(dateRange.to, 'MMM d') : '...'}`
-                  : 'Date Range'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-popover pointer-events-auto" align="start">
-              <Calendar
-                mode="range"
-                selected={{ from: dateRange.from, to: dateRange.to }}
-                onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                numberOfMonths={2}
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {dateRange.from || dateRange.to ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDateRange({ from: undefined, to: undefined })}
-              className="h-9"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Clear
-            </Button>
-          ) : null}
-
           {/* Comments sort */}
           <Button
             variant="outline"
