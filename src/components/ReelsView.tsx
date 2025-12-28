@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, SlidersHorizontal, Heart, Eye, Zap, X, Clock, MessageCircle, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, Heart, Eye, Zap, X, Clock, MessageCircle, ArrowUp, ArrowDown, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -36,20 +36,31 @@ const formatViews = (views: number): string => {
   return views.toString();
 };
 
+// Parse date to get just the day part for display - matches VideosView format
 const formatShortDate = (dateStr: string): string => {
   if (!dateStr) return '';
-  try {
-    const formats = ['yyyy-MM-dd', 'MM/dd/yyyy', 'dd/MM/yyyy', 'MMM d, yyyy'];
-    for (const fmt of formats) {
-      const parsed = parse(dateStr, fmt, new Date());
-      if (isValid(parsed)) {
-        return format(parsed, 'd MMM');
-      }
-    }
-    return dateStr;
-  } catch {
-    return dateStr;
+  // Try format: "2025-12-27 23:06" or "20/11/2025, 19:59"
+  let day = '', month = '';
+  
+  if (dateStr.includes('-')) {
+    // Format: "2025-12-27 23:06"
+    const parts = dateStr.split(' ')[0];
+    const [year, m, d] = parts.split('-');
+    day = d;
+    month = m;
+  } else if (dateStr.includes('/')) {
+    // Format: "20/11/2025, 19:59"
+    const parts = dateStr.split(', ')[0];
+    const [d, m] = parts.split('/');
+    day = d;
+    month = m;
   }
+  
+  if (!day || !month) return dateStr;
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthName = months[parseInt(month) - 1] || month;
+  return `${parseInt(day)} ${monthName}`;
 };
 
 interface ReelCardProps {
@@ -96,12 +107,15 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
           </span>
         </div>
 
-        {/* Date - top right */}
-        <div className="absolute top-2 right-2">
-          <span className="text-[10px] text-white/80 font-medium">
-            {formatShortDate(reel.publishDate)}
-          </span>
-        </div>
+        {/* Date badge - top right, matching VideosView design */}
+        {formatShortDate(reel.publishDate) && (
+          <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/40 backdrop-blur-md rounded-lg flex items-center gap-1 border border-white/10">
+            <CalendarIcon className="w-2.5 h-2.5 text-white/60" />
+            <span className="text-white/80 text-[10px] font-medium tracking-wide">
+              {formatShortDate(reel.publishDate)}
+            </span>
+          </div>
+        )}
 
         {/* Outlier badge */}
         {isOutlier && (
