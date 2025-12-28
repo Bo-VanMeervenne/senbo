@@ -66,11 +66,20 @@ const formatShortDate = (dateStr: string): string => {
 // Format duration to round seconds and add 's' suffix
 const formatDuration = (duration: string): string => {
   if (!duration) return '';
+  
+  // Handle format like "19,7" or "19.7" (seconds with decimal)
+  if (!duration.includes(':')) {
+    // Replace comma with period for parsing
+    const normalized = duration.replace(',', '.');
+    const seconds = Math.round(parseFloat(normalized));
+    return `${seconds}s`;
+  }
+  
   // Handle format like "0:45.123" or "1:23.456" or "0:45" or "1:23"
   const parts = duration.split(':');
   if (parts.length === 2) {
     const minutes = parseInt(parts[0]);
-    const secondsWithDecimal = parseFloat(parts[1]);
+    const secondsWithDecimal = parseFloat(parts[1].replace(',', '.'));
     const seconds = Math.round(secondsWithDecimal);
     if (minutes === 0) {
       return `${seconds}s`;
