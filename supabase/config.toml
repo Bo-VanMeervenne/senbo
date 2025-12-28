@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.get-subscriber-count]
 verify_jwt = false
+
+[functions.ig-thumbnail-proxy]
+verify_jwt = false
