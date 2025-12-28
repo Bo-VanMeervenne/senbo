@@ -37,58 +37,64 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Minimal Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50">
-        <div className="flex justify-center pt-8">
-          <div className="flex items-center gap-1 p-1 bg-card/80 backdrop-blur-xl rounded-full border border-border/50">
-            <button
-              onClick={() => setActiveTab('general')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'general' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              General
-            </button>
-            <button
-              onClick={() => setActiveTab('revenue')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'revenue' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Revenue Split
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'videos' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Videos
-            </button>
-            <button
-              onClick={() => setActiveTab('learn')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'learn' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Learn
-            </button>
-            <button
-              onClick={() => setActiveTab('reels')}
-              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                activeTab === 'reels' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Reels
-            </button>
+        <div className="flex justify-center pt-6 md:pt-8 px-4">
+          <div className="flex flex-col md:flex-row items-center bg-card/80 backdrop-blur-xl rounded-2xl md:rounded-full border border-border/50 p-1">
+            {/* Row 1 on mobile, all inline on desktop */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`px-4 md:px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'general' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => setActiveTab('revenue')}
+                className={`px-4 md:px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'revenue' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Revenue
+              </button>
+              <button
+                onClick={() => setActiveTab('videos')}
+                className={`px-4 md:px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'videos' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Videos
+              </button>
+            </div>
+            {/* Row 2 on mobile, continues inline on desktop */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('learn')}
+                className={`px-4 md:px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'learn' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Learn
+              </button>
+              <button
+                onClick={() => setActiveTab('reels')}
+                className={`px-4 md:px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                  activeTab === 'reels' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Reels
+              </button>
+            </div>
           </div>
         </div>
 
