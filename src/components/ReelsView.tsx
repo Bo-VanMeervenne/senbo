@@ -426,13 +426,16 @@ export const ReelsView = () => {
         </div>
 
         {/* Right side: Quick sort buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {/* Newest/Oldest toggle */}
           <Button
-            variant={sortBy === 'dateDesc' || sortBy === 'dateAsc' ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setSortBy(sortBy === 'dateDesc' ? 'dateAsc' : 'dateDesc')}
-            className="h-9 gap-1.5"
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              (sortBy === 'dateDesc' || sortBy === 'dateAsc') && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
+            )}
           >
             {sortBy === 'dateAsc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
             {sortBy === 'dateAsc' ? 'Oldest' : 'Newest'}
@@ -440,10 +443,13 @@ export const ReelsView = () => {
 
           {/* Views sort */}
           <Button
-            variant={sortBy === 'views' ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setSortBy('views')}
-            className="h-9 gap-1.5"
+            onClick={() => setSortBy(sortBy === 'views' ? 'dateDesc' : 'views')}
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              sortBy === 'views' && "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground"
+            )}
           >
             <Eye className="w-3.5 h-3.5" />
             Views
@@ -451,21 +457,27 @@ export const ReelsView = () => {
 
           {/* Likes sort */}
           <Button
-            variant={sortBy === 'likes' ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setSortBy('likes')}
-            className="h-9 gap-1.5"
+            onClick={() => setSortBy(sortBy === 'likes' ? 'dateDesc' : 'likes')}
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              sortBy === 'likes' && "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground"
+            )}
           >
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className={cn("w-3.5 h-3.5", sortBy === 'likes' && "fill-current")} />
             Likes
           </Button>
 
           {/* Advanced toggle */}
           <Button
-            variant={showAdvanced ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="h-9 gap-1.5"
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              showAdvanced && "bg-muted border-muted-foreground/30"
+            )}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
           </Button>
@@ -510,10 +522,13 @@ export const ReelsView = () => {
 
           {/* Comments sort */}
           <Button
-            variant={sortBy === 'comments' ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setSortBy('comments')}
-            className="h-9 gap-1.5"
+            onClick={() => setSortBy(sortBy === 'comments' ? 'dateDesc' : 'comments')}
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              sortBy === 'comments' && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
+            )}
           >
             <MessageCircle className="w-3.5 h-3.5" />
             Most Comments
@@ -521,10 +536,13 @@ export const ReelsView = () => {
 
           {/* Duration sort */}
           <Button
-            variant={sortBy === 'duration' ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setSortBy('duration')}
-            className="h-9 gap-1.5"
+            onClick={() => setSortBy(sortBy === 'duration' ? 'dateDesc' : 'duration')}
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              sortBy === 'duration' && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
+            )}
           >
             <Clock className="w-3.5 h-3.5" />
             Longest
@@ -532,7 +550,7 @@ export const ReelsView = () => {
 
           {/* Outlier filter */}
           <Button
-            variant={showOutliers ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => {
               if (!showOutliers) {
@@ -540,7 +558,10 @@ export const ReelsView = () => {
               }
               setShowOutliers(!showOutliers);
             }}
-            className={cn("h-9 gap-1.5", showOutliers && "bg-yellow-500 hover:bg-yellow-600 text-black")}
+            className={cn(
+              "h-9 gap-1.5 transition-all",
+              showOutliers && "bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-600 hover:text-black"
+            )}
           >
             <Zap className="w-3.5 h-3.5" />
             Best Outliers
