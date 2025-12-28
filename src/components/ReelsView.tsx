@@ -9,6 +9,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, parse, isAfter, isBefore, isValid } from "date-fns";
 
+const THUMB_PROXY_BASE = "https://qxtnpwmdspwidrtiqimv.supabase.co/functions/v1/ig-thumbnail-proxy";
+const getProxiedThumbnailUrl = (rawUrl: string) => `${THUMB_PROXY_BASE}?url=${encodeURIComponent(rawUrl)}`;
+
 interface Reel {
   title: string;
   url: string;
@@ -73,16 +76,15 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
       <div className="relative aspect-[9/16] overflow-hidden bg-muted">
         {reel.thumbnailUrl && !imageError ? (
           <img
-            src={reel.thumbnailUrl}
+            src={getProxiedThumbnailUrl(reel.thumbnailUrl)}
             alt={reel.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImageError(true)}
-            crossOrigin="anonymous"
-            referrerPolicy="no-referrer"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">
-            {reel.title?.slice(0, 50) || 'No thumbnail'}
+            {reel.title?.slice(0, 50) || "No thumbnail"}
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
