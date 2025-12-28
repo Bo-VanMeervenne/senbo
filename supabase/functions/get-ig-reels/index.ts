@@ -23,12 +23,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch from sheet with gid=1693539839
-    // First get the sheet name from the spreadsheet metadata, or use direct range
+    // Fetch from sheet - columns: A=Creator, B=Title, C=Likes, D=Views, E=Date, F=Thumbnail, G=Url, H=Shares, I=Comments, J=Duration
     const sheetName = 'IG Reels';
-    const range = encodeURIComponent(`${sheetName}!A2:I`);
+    const range = encodeURIComponent(`${sheetName}!A2:J`);
     
-    // Try fetching with sheet gid parameter for more reliability
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${apiKey}`;
     
     console.log('Fetching IG Reels from Google Sheets...');
@@ -53,7 +51,7 @@ serve(async (req) => {
       return parseInt(cleaned) || 0;
     };
 
-    // Actual columns: A=Creator, B=Title, C=Likes, D=Views, E=PublishDate, F=Thumbnail, G=URL, H=Comments, I=Duration
+    // Columns: A=Creator, B=Title, C=Likes, D=Views, E=Date, F=Thumbnail, G=Url, H=Shares, I=Comments, J=Duration
     const reels = (data.values || [])
       .filter((row: string[]) => row[0] && row[6]) // Must have creator and URL
       .map((row: string[]) => ({
@@ -64,8 +62,9 @@ serve(async (req) => {
         publishDate: row[4] || '',
         thumbnailUrl: row[5] || '',
         url: row[6] || '',
-        comments: parseNumber(row[7] || '0'),
-        duration: row[8] || '',
+        shares: parseNumber(row[7] || '0'),
+        comments: parseNumber(row[8] || '0'),
+        duration: row[9] || '',
       }));
 
     console.log(`Parsed ${reels.length} IG Reels`);
