@@ -156,7 +156,7 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
         {/* Duration badge */}
         {reel.duration && (
           <div className="absolute bottom-12 right-2">
-            <span className="text-[10px] text-white/80 bg-black/50 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] text-white/80 bg-black/50 px-1.5 py-0.5 rounded lowercase">
               {formatDuration(reel.duration)}
             </span>
           </div>
