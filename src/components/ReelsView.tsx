@@ -56,7 +56,6 @@ interface ReelCardProps {
 }
 
 const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
-  const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
     if (reel.url) {
@@ -64,9 +63,7 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
     }
   };
 
-  const thumbnailSrc = imageError || !reel.thumbnailUrl
-    ? `https://picsum.photos/seed/${encodeURIComponent(reel.title)}/320/180`
-    : reel.thumbnailUrl;
+  const thumbnailSrc = reel.thumbnailUrl || '';
 
   return (
     <div
@@ -75,17 +72,22 @@ const ReelCard = ({ reel, isOutlier, outlierMultiplier }: ReelCardProps) => {
     >
       {/* Thumbnail */}
       <div className="relative aspect-[9/16] overflow-hidden">
-        <img
-          src={thumbnailSrc}
-          alt={reel.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImageError(true)}
-        />
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={reel.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+            No thumbnail
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         
         {/* Creator badge - top left */}
         <div className="absolute top-2 left-2">
-          <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-pink-500/80 text-white">
+          <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-destructive text-destructive-foreground">
             {reel.creator || 'Unknown'}
           </span>
         </div>
