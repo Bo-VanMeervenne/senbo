@@ -10,7 +10,8 @@ interface PlannerItem {
   stage: Stage;
   position: number;
   created_at: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
+  title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
 }
 
@@ -44,13 +45,13 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
     tiktok: "🎵",
   };
 
-  const getDisplayLink = (url: string) => {
-    try {
-      const parsed = new URL(url);
-      return parsed.hostname.replace("www.", "");
-    } catch {
-      return url.slice(0, 30);
+  // Use title if available, otherwise show platform name
+  const getDisplayText = () => {
+    if (item.title) {
+      // Truncate long titles
+      return item.title.length > 60 ? item.title.slice(0, 57) + "..." : item.title;
     }
+    return item.platform ? item.platform.charAt(0).toUpperCase() + item.platform.slice(1) : "Link";
   };
 
   return (
@@ -100,7 +101,7 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
         </div>
       )}
 
-      {/* Link info */}
+      {/* Title/Link info */}
       <div className="p-2">
         <a
           href={item.link}
@@ -108,9 +109,9 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className="text-xs text-muted-foreground hover:text-foreground truncate block"
+          className="text-xs text-muted-foreground hover:text-foreground line-clamp-2 block"
         >
-          {getDisplayLink(item.link)}
+          {getDisplayText()}
         </a>
       </div>
     </div>

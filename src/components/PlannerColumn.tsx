@@ -9,7 +9,8 @@ interface PlannerItem {
   stage: Stage;
   position: number;
   created_at: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
+  title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
 }
 
