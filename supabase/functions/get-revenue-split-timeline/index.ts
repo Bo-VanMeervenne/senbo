@@ -35,12 +35,22 @@ serve(async (req) => {
     const lastMonthRange = 'Senne & Bo Videos (Last Month)!G:I';
     const lastMonthUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(lastMonthRange)}?key=${apiKey}`;
 
+    // Fetch Senne Only Videos - Current Month (F=Revenue After Tax, H=Publish Date)
+    const senneCurrentMonthRange = 'Senne Only Videos (Current Month)!F:H';
+    const senneCurrentMonthUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(senneCurrentMonthRange)}?key=${apiKey}`;
+    
+    // Fetch Senne Only Videos - Last Month
+    const senneLastMonthRange = 'Senne Only Videos (Last Month)!F:H';
+    const senneLastMonthUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(senneLastMonthRange)}?key=${apiKey}`;
+
     console.log('Fetching revenue split timeline data...');
 
-    const [dailyResponse, currentMonthResponse, lastMonthResponse] = await Promise.all([
+    const [dailyResponse, currentMonthResponse, lastMonthResponse, senneCurrentResponse, senneLastResponse] = await Promise.all([
       fetch(dailyRevenueUrl),
       fetch(currentMonthUrl),
-      fetch(lastMonthUrl)
+      fetch(lastMonthUrl),
+      fetch(senneCurrentMonthUrl),
+      fetch(senneLastMonthUrl)
     ]);
 
     if (!dailyResponse.ok || !currentMonthResponse.ok || !lastMonthResponse.ok) {
@@ -51,10 +61,12 @@ serve(async (req) => {
       );
     }
 
-    const [dailyData, currentMonthData, lastMonthData] = await Promise.all([
+    const [dailyData, currentMonthData, lastMonthData, senneCurrentData, senneLastData] = await Promise.all([
       dailyResponse.json(),
       currentMonthResponse.json(),
-      lastMonthResponse.json()
+      lastMonthResponse.json(),
+      senneCurrentResponse.ok ? senneCurrentResponse.json() : { values: [] },
+      senneLastResponse.ok ? senneLastResponse.json() : { values: [] }
     ]);
 
     // Parse amount helper
@@ -148,14 +160,48 @@ serve(async (req) => {
     processVideoRows(currentMonthRows);
     processVideoRows(lastMonthRows);
 
+    // Parse Senne Only Videos - create a map of date -> Senne solo revenue
+    // Columns fetched F:H: [0]=Revenue After Tax, [1]=VideoId, [2]=Publish Date
+    const senneSoloMap: Record<string, number> = {};
+    
+    const processSenneVideoRows = (rows: string[][]) => {
+      for (const row of rows) {
+        const revenue = parseAmount(row[0]); // Column F - Revenue After Tax
+        const publishDate = parseDate(row[2]); // Column H - Publish Date
+        
+        if (publishDate && revenue > 0) {
+          senneSoloMap[publishDate] = (senneSoloMap[publishDate] || 0) + revenue;
+        }
+      }
+    };
+
+    const senneCurrentRows = senneCurrentData.values?.slice(1) || [];
+    const senneLastRows = senneLastData.values?.slice(1) || [];
+    
+    processSenneVideoRows(senneCurrentRows);
+    processSenneVideoRows(senneLastRows);
+
     console.log('Daily revenue dates:', Object.keys(dailyRevenueMap).length);
     console.log('Bo split dates:', Object.keys(boSplitMap).length);
+    console.log('Senne solo dates:', Object.keys(senneSoloMap).length);
+    
+    // Log totals for debugging
+    const totalDailyRevenue = Object.values(dailyRevenueMap).reduce((a, b) => a + b, 0);
+    const totalBoSplit = Object.values(boSplitMap).reduce((a, b) => a + b, 0);
+    const totalSenneSolo = Object.values(senneSoloMap).reduce((a, b) => a + b, 0);
+    console.log(`Total Daily Revenue: $${totalDailyRevenue.toFixed(2)}`);
+    console.log(`Total Bo Split: $${totalBoSplit.toFixed(2)}`);
+    console.log(`Total Senne Solo: $${totalSenneSolo.toFixed(2)}`);
 
     // Build timeline data - only include dates where Daily Revenue exists (complete data)
     const timelineData: { date: string; senneRevenue: number; boRevenue: number }[] = [];
 
     for (const [date, totalRevenue] of Object.entries(dailyRevenueMap)) {
       const boRevenue = boSplitMap[date] || 0;
+      const senneSoloRevenue = senneSoloMap[date] || 0;
+      // Senne gets: (total - bo's share from joint videos) + his solo revenue
+      // But the daily revenue already includes everything, so:
+      // senneRevenue = totalRevenue - boRevenue (this gives Senne's share including solo)
       const senneRevenue = Math.max(0, totalRevenue - boRevenue);
 
       timelineData.push({
