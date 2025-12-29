@@ -1,0 +1,268 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from "@dnd-kit/core";
+import { X, Plus, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import PlannerColumn from "./PlannerColumn";
+import PlannerCard from "./PlannerCard";
+
+type Stage = "idea" | "tomorrow" | "special";
+
+interface PlannerItem {
+  id: string;
+  link: string;
+  stage: Stage;
+  position: number;
+  created_at: string;
+  thumbnail?: string;
+  platform?: "instagram" | "youtube" | "tiktok";
+}
+
+const STAGES: { id: Stage; label: string }[] = [
+  { id: "idea", label: "Idea" },
+  { id: "tomorrow", label: "Tomorrow" },
+  { id: "special", label: "Special" },
+];
+
+const detectPlatform = (url: string): "instagram" | "youtube" | "tiktok" | null => {
+  if (url.includes("instagram.com") || url.includes("instagr.am")) return "instagram";
+  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
+  if (url.includes("tiktok.com") || url.includes("vm.tiktok")) return "tiktok";
+  return null;
+};
+
+const getYouTubeVideoId = (url: string): string | null => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+const PlannerView = () => {
+  const [items, setItems] = useState<PlannerItem[]>([]);
+  const [newLink, setNewLink] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [activeItem, setActiveItem] = useState<PlannerItem | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("planner_items")
+      .select("*")
+      .order("position", { ascending: true });
+
+    if (error) {
+      toast.error("Failed to load items");
+      console.error(error);
+    } else {
+      const enrichedItems = (data || []).map((item) => ({
+        ...item,
+        stage: item.stage as Stage,
+        platform: detectPlatform(item.link),
+        thumbnail: getThumbnail(item.link),
+      }));
+      setItems(enrichedItems);
+    }
+    setIsLoading(false);
+  };
+
+  const getThumbnail = (url: string): string | undefined => {
+    const platform = detectPlatform(url);
+    if (platform === "youtube") {
+      const videoId = getYouTubeVideoId(url);
+      if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    // For TikTok and Instagram, we'll use a placeholder or try to fetch later
+    return undefined;
+  };
+
+  const addItem = async () => {
+    if (!newLink.trim()) return;
+
+    const platform = detectPlatform(newLink);
+    if (!platform) {
+      toast.error("Please enter a valid Instagram, YouTube, or TikTok link");
+      return;
+    }
+
+    setIsAdding(true);
+    const maxPosition = Math.max(0, ...items.filter(i => i.stage === "idea").map(i => i.position));
+
+    const { data, error } = await supabase
+      .from("planner_items")
+      .insert({ link: newLink.trim(), stage: "idea", position: maxPosition + 1 })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Failed to add item");
+      console.error(error);
+    } else {
+      const newItem: PlannerItem = {
+        ...data,
+        stage: data.stage as Stage,
+        platform,
+        thumbnail: getThumbnail(newLink),
+      };
+      setItems([...items, newItem]);
+      setNewLink("");
+      toast.success("Added to Idea");
+    }
+    setIsAdding(false);
+  };
+
+  const deleteItem = async (id: string) => {
+    const { error } = await supabase.from("planner_items").delete().eq("id", id);
+    if (error) {
+      toast.error("Failed to delete");
+    } else {
+      setItems(items.filter((i) => i.id !== id));
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = items.find((i) => i.id === event.active.id);
+    setActiveItem(item || null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveItem(null);
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Check if dropped on a column
+    const targetStage = STAGES.find((s) => s.id === overId)?.id;
+    
+    if (targetStage) {
+      // Dropped on a column directly
+      const item = items.find((i) => i.id === activeId);
+      if (item && item.stage !== targetStage) {
+        const updatedItems = items.map((i) =>
+          i.id === activeId ? { ...i, stage: targetStage } : i
+        );
+        setItems(updatedItems);
+
+        const { error } = await supabase
+          .from("planner_items")
+          .update({ stage: targetStage })
+          .eq("id", activeId);
+
+        if (error) {
+          toast.error("Failed to move item");
+          fetchItems(); // Revert on error
+        }
+      }
+    } else {
+      // Dropped on another card - get its stage
+      const overItem = items.find((i) => i.id === overId);
+      if (overItem) {
+        const item = items.find((i) => i.id === activeId);
+        if (item && item.stage !== overItem.stage) {
+          const updatedItems = items.map((i) =>
+            i.id === activeId ? { ...i, stage: overItem.stage } : i
+          );
+          setItems(updatedItems);
+
+          const { error } = await supabase
+            .from("planner_items")
+            .update({ stage: overItem.stage })
+            .eq("id", activeId);
+
+          if (error) {
+            toast.error("Failed to move item");
+            fetchItems();
+          }
+        }
+      }
+    }
+  };
+
+  const getItemsByStage = (stage: Stage) =>
+    items.filter((item) => item.stage === stage);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 pb-8">
+      {/* Add new item */}
+      <div className="max-w-md mx-auto mb-6">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Paste TikTok, Instagram, or YouTube link..."
+            value={newLink}
+            onChange={(e) => setNewLink(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addItem()}
+            className="flex-1"
+          />
+          <Button onClick={addItem} disabled={isAdding || !newLink.trim()}>
+            {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Kanban board */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {STAGES.map((stage) => (
+            <PlannerColumn
+              key={stage.id}
+              id={stage.id}
+              label={stage.label}
+              items={getItemsByStage(stage.id)}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeItem ? (
+            <PlannerCard item={activeItem} onDelete={() => {}} isDragging />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
+  );
+};
+
+export default PlannerView;
