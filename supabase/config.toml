@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.ig-thumbnail-proxy]
 verify_jwt = false
+
+[functions.get-video-thumbnail]
+verify_jwt = false
