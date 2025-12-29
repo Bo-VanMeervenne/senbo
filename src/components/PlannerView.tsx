@@ -12,13 +12,14 @@ import {
   useSensors,
   closestCenter,
 } from "@dnd-kit/core";
-import { X, Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import PlannerColumn from "./PlannerColumn";
 import PlannerCard from "./PlannerCard";
 
 type Stage = "idea" | "tomorrow" | "special";
+type Board = "senbo" | "senne";
 
 interface PlannerItem {
   id: string;
@@ -28,6 +29,7 @@ interface PlannerItem {
   created_at: string;
   thumbnail?: string | null;
   title?: string | null;
+  board?: string;
   platform?: "instagram" | "youtube" | "tiktok";
 }
 
@@ -45,6 +47,7 @@ const detectPlatform = (url: string): "instagram" | "youtube" | "tiktok" | null 
 };
 
 const PlannerView = () => {
+  const [activeBoard, setActiveBoard] = useState<Board>("senbo");
   const [items, setItems] = useState<PlannerItem[]>([]);
   const [newLink, setNewLink] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -58,13 +61,14 @@ const PlannerView = () => {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [activeBoard]);
 
   const fetchItems = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
       .from("planner_items")
       .select("*")
+      .eq("board", activeBoard)
       .order("position", { ascending: true });
 
     if (error) {
@@ -108,7 +112,6 @@ const PlannerView = () => {
 
     setIsAdding(true);
     
-    // Fetch thumbnail and title first
     const { thumbnail, title } = await fetchThumbnail(newLink.trim());
     
     const maxPosition = Math.max(0, ...items.filter(i => i.stage === "idea").map(i => i.position));
@@ -120,7 +123,8 @@ const PlannerView = () => {
         stage: "idea", 
         position: maxPosition + 1,
         thumbnail,
-        title
+        title,
+        board: activeBoard
       })
       .select()
       .single();
@@ -164,11 +168,9 @@ const PlannerView = () => {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Check if dropped on a column
     const targetStage = STAGES.find((s) => s.id === overId)?.id;
     
     if (targetStage) {
-      // Dropped on a column directly
       const item = items.find((i) => i.id === activeId);
       if (item && item.stage !== targetStage) {
         const updatedItems = items.map((i) =>
@@ -183,11 +185,10 @@ const PlannerView = () => {
 
         if (error) {
           toast.error("Failed to move item");
-          fetchItems(); // Revert on error
+          fetchItems();
         }
       }
     } else {
-      // Dropped on another card - get its stage
       const overItem = items.find((i) => i.id === overId);
       if (overItem) {
         const item = items.find((i) => i.id === activeId);
@@ -214,16 +215,34 @@ const PlannerView = () => {
   const getItemsByStage = (stage: Stage) =>
     items.filter((item) => item.stage === stage);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
     <div className="px-4 pb-8">
+      {/* Board tabs */}
+      <div className="flex justify-center mb-4">
+        <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
+          <button
+            onClick={() => setActiveBoard("senbo")}
+            className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
+              activeBoard === "senbo"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            SenBo
+          </button>
+          <button
+            onClick={() => setActiveBoard("senne")}
+            className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
+              activeBoard === "senne"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Senne
+          </button>
+        </div>
+      </div>
+
       {/* Add new item */}
       <div className="max-w-md mx-auto mb-6">
         <div className="flex gap-2">
@@ -240,31 +259,36 @@ const PlannerView = () => {
         </div>
       </div>
 
-      {/* Kanban board */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {STAGES.map((stage) => (
-            <PlannerColumn
-              key={stage.id}
-              id={stage.id}
-              label={stage.label}
-              items={getItemsByStage(stage.id)}
-              onDelete={deleteItem}
-            />
-          ))}
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {STAGES.map((stage) => (
+              <PlannerColumn
+                key={stage.id}
+                id={stage.id}
+                label={stage.label}
+                items={getItemsByStage(stage.id)}
+                onDelete={deleteItem}
+              />
+            ))}
+          </div>
 
-        <DragOverlay>
-          {activeItem ? (
-            <PlannerCard item={activeItem} onDelete={() => {}} isDragging />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {activeItem ? (
+              <PlannerCard item={activeItem} onDelete={() => {}} isDragging />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
     </div>
   );
 };

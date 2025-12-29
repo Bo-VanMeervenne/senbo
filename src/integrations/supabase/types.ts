@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       planner_items: {
         Row: {
+          board: string
           created_at: string
           id: string
           link: string
@@ -25,6 +26,7 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          board?: string
           created_at?: string
           id?: string
           link: string
@@ -34,6 +36,7 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          board?: string
           created_at?: string
           id?: string
           link?: string
