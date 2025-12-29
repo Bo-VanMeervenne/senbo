@@ -31,7 +31,7 @@ interface PlannerItem {
   title?: string | null;
   board?: string;
   platform?: "instagram" | "youtube" | "tiktok";
-  starred?: boolean;
+  priority?: number | null;
 }
 
 const STAGES: { id: Stage; label: string }[] = [
@@ -80,12 +80,19 @@ const PlannerView = () => {
         ...item,
         stage: item.stage as Stage,
         platform: detectPlatform(item.link),
-        starred: item.starred ?? false,
+        priority: item.priority ?? null,
       }));
-      // Sort: starred items first, then by position
+      // Sort: items with priority first (lower number = higher priority), then by position
       enrichedItems.sort((a, b) => {
-        if (a.starred && !b.starred) return -1;
-        if (!a.starred && b.starred) return 1;
+        // Both have priority: sort by priority (1 is highest)
+        if (a.priority !== null && b.priority !== null) {
+          return a.priority - b.priority;
+        }
+        // Only a has priority: a comes first
+        if (a.priority !== null && b.priority === null) return -1;
+        // Only b has priority: b comes first
+        if (a.priority === null && b.priority !== null) return 1;
+        // Neither has priority: sort by position
         return a.position - b.position;
       });
       setItems(enrichedItems);
@@ -145,10 +152,11 @@ const PlannerView = () => {
         ...data,
         stage: data.stage as Stage,
         platform,
+        priority: null,
       };
       setItems([...items, newItem]);
       setNewLink("");
-      toast.success("Added to Idea");
+      toast.success("Added to Ideas");
     }
     setIsAdding(false);
   };
@@ -162,31 +170,29 @@ const PlannerView = () => {
     }
   };
 
-  const toggleStar = async (id: string) => {
-    const item = items.find((i) => i.id === id);
-    if (!item) return;
-    
-    const newStarred = !item.starred;
-    
+  const setPriority = async (id: string, priority: number | null) => {
     // Optimistically update UI
     const updatedItems = items.map((i) =>
-      i.id === id ? { ...i, starred: newStarred } : i
+      i.id === id ? { ...i, priority } : i
     );
-    // Re-sort: starred first
+    // Re-sort by priority
     updatedItems.sort((a, b) => {
-      if (a.starred && !b.starred) return -1;
-      if (!a.starred && b.starred) return 1;
+      if (a.priority !== null && b.priority !== null) {
+        return a.priority - b.priority;
+      }
+      if (a.priority !== null && b.priority === null) return -1;
+      if (a.priority === null && b.priority !== null) return 1;
       return a.position - b.position;
     });
     setItems(updatedItems);
 
     const { error } = await supabase
       .from("planner_items")
-      .update({ starred: newStarred })
+      .update({ priority })
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to update star");
+      toast.error("Failed to update priority");
       fetchItems();
     }
   };
@@ -251,10 +257,13 @@ const PlannerView = () => {
 
   const getItemsByStage = (stage: Stage) => {
     const stageItems = items.filter((item) => item.stage === stage);
-    // Already sorted globally, but ensure starred first within stage
+    // Already sorted globally, but ensure priority sort within stage
     return stageItems.sort((a, b) => {
-      if (a.starred && !b.starred) return -1;
-      if (!a.starred && b.starred) return 1;
+      if (a.priority !== null && b.priority !== null) {
+        return a.priority - b.priority;
+      }
+      if (a.priority !== null && b.priority === null) return -1;
+      if (a.priority === null && b.priority !== null) return 1;
       return a.position - b.position;
     });
   };
@@ -322,7 +331,7 @@ const PlannerView = () => {
                 label={stage.label}
                 items={getItemsByStage(stage.id)}
                 onDelete={deleteItem}
-                onToggleStar={toggleStar}
+                onSetPriority={setPriority}
               />
             ))}
           </div>

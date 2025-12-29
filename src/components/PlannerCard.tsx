@@ -1,8 +1,13 @@
 import { useDraggable } from "@dnd-kit/core";
-import { X, Link, Star } from "lucide-react";
+import { X, Link } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import PlatformIcon from "./PlatformIcon";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Stage = "idea" | "tomorrow" | "special";
 
@@ -15,18 +20,19 @@ interface PlannerItem {
   thumbnail?: string | null;
   title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
-  starred?: boolean;
+  priority?: number | null;
 }
 
 interface PlannerCardProps {
   item: PlannerItem;
   onDelete: (id: string) => void;
-  onToggleStar?: (id: string) => void;
+  onSetPriority?: (id: string, priority: number | null) => void;
   isDragging?: boolean;
 }
 
-const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: PlannerCardProps) => {
+const PlannerCard = ({ item, onDelete, onSetPriority, isDragging = false }: PlannerCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [priorityOpen, setPriorityOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: item.id,
   });
@@ -76,6 +82,19 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
     instagram: "text-pink-400",
     youtube: "text-red-500",
     tiktok: "text-cyan-400",
+  };
+
+  const handlePrioritySelect = (priority: number | null) => {
+    if (onSetPriority) {
+      onSetPriority(item.id, priority);
+    }
+    setPriorityOpen(false);
+  };
+
+  const getPriorityColor = (priority: number) => {
+    if (priority <= 3) return "bg-red-500 text-white";
+    if (priority <= 6) return "bg-amber-500 text-black";
+    return "bg-green-500 text-white";
   };
 
   return (
@@ -135,22 +154,60 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
               <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
             </div>
           )}
-          {/* Star button - bottom right */}
-          {onToggleStar && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleStar(item.id);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className={`absolute bottom-1 right-1 p-1 rounded transition-colors ${
-                item.starred 
-                  ? "bg-yellow-500 text-black" 
-                  : "bg-black/60 text-white/70 hover:text-yellow-400"
-              }`}
-            >
-              <Star className={`w-3.5 h-3.5 ${item.starred ? "fill-current" : ""}`} />
-            </button>
+          {/* Priority selector - bottom right */}
+          {onSetPriority && (
+            <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className={`absolute bottom-1 right-1 min-w-[24px] h-6 px-1.5 rounded text-xs font-bold transition-colors ${
+                    item.priority 
+                      ? getPriorityColor(item.priority)
+                      : "bg-black/60 text-white/70 hover:text-white"
+                  }`}
+                >
+                  {item.priority ?? "P"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-auto p-2" 
+                align="end"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <div className="grid grid-cols-5 gap-1">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <button
+                      key={num}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrioritySelect(item.priority === num ? null : num);
+                      }}
+                      className={`w-8 h-8 rounded text-sm font-bold transition-colors ${
+                        item.priority === num 
+                          ? getPriorityColor(num)
+                          : "bg-muted hover:bg-muted/80 text-foreground"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                {item.priority && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrioritySelect(null);
+                    }}
+                    className="w-full mt-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear priority
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       ) : (
@@ -162,22 +219,60 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
               <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
             </div>
           )}
-          {/* Star button - bottom right */}
-          {onToggleStar && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleStar(item.id);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className={`absolute bottom-1 right-1 p-1 rounded transition-colors ${
-                item.starred 
-                  ? "bg-yellow-500 text-black" 
-                  : "bg-black/60 text-white/70 hover:text-yellow-400"
-              }`}
-            >
-              <Star className={`w-3.5 h-3.5 ${item.starred ? "fill-current" : ""}`} />
-            </button>
+          {/* Priority selector - bottom right */}
+          {onSetPriority && (
+            <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className={`absolute bottom-1 right-1 min-w-[24px] h-6 px-1.5 rounded text-xs font-bold transition-colors ${
+                    item.priority 
+                      ? getPriorityColor(item.priority)
+                      : "bg-black/60 text-white/70 hover:text-white"
+                  }`}
+                >
+                  {item.priority ?? "P"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-auto p-2" 
+                align="end"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <div className="grid grid-cols-5 gap-1">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <button
+                      key={num}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrioritySelect(item.priority === num ? null : num);
+                      }}
+                      className={`w-8 h-8 rounded text-sm font-bold transition-colors ${
+                        item.priority === num 
+                          ? getPriorityColor(num)
+                          : "bg-muted hover:bg-muted/80 text-foreground"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                {item.priority && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrioritySelect(null);
+                    }}
+                    className="w-full mt-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear priority
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       )}

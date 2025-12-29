@@ -18,7 +18,7 @@ interface TimelineEntry {
   boRevenue: number;
 }
 
-type TimeFilter = "7" | "30" | "60";
+type TimeFilter = "7" | "30" | "60" | "month";
 
 const fetchTimelineData = async (): Promise<TimelineEntry[]> => {
   const { data, error } = await supabase.functions.invoke("get-revenue-split-timeline");
@@ -27,7 +27,7 @@ const fetchTimelineData = async (): Promise<TimelineEntry[]> => {
 };
 
 const RevenueSplitChart = () => {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("7");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("month");
 
   const { data: allData, isLoading } = useQuery({
     queryKey: ["revenue-split-timeline"],
@@ -35,9 +35,21 @@ const RevenueSplitChart = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Filter data based on selected time range - uses most recent data point as reference
+  // Filter data based on selected time range
   const getFilteredData = () => {
     if (!allData || allData.length === 0) return [];
+
+    if (timeFilter === "month") {
+      // Current month filter - matches the Summary sheet data
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      return allData.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+      });
+    }
 
     // Find the most recent date in the data (data is already sorted)
     const mostRecentDate = new Date(allData[allData.length - 1].date);
@@ -118,7 +130,17 @@ const RevenueSplitChart = () => {
         
         {/* Time Filter Toggle */}
         <div className="flex gap-1">
-          {(["7", "30", "60"] as TimeFilter[]).map((filter) => (
+          <button
+            onClick={() => setTimeFilter("month")}
+            className={`px-4 py-2 text-xs uppercase tracking-wider rounded-lg transition-all duration-300 ${
+              timeFilter === "month"
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground hover:text-foreground border border-transparent"
+            }`}
+          >
+            Month
+          </button>
+          {(["7", "30", "60"] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setTimeFilter(filter)}
