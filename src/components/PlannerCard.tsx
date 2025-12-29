@@ -118,9 +118,9 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
         </button>
       )}
 
-      {/* Thumbnail - 9:16 aspect ratio for short form content */}
+      {/* Thumbnail - shorter aspect ratio for compact cards */}
       {thumbnailUrl ? (
-        <div className="aspect-[9/16] w-full relative">
+        <div className="aspect-[3/4] w-full relative">
           <img
             src={thumbnailUrl}
             alt="Video thumbnail"
@@ -154,7 +154,7 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
           )}
         </div>
       ) : (
-        <div className="aspect-[9/16] w-full flex items-center justify-center bg-muted/30 relative">
+        <div className="aspect-[3/4] w-full flex items-center justify-center bg-muted/30 relative">
           <span className="text-3xl">{item.platform === "instagram" ? "📸" : item.platform === "youtube" ? "▶️" : item.platform === "tiktok" ? "🎵" : "🔗"}</span>
           {/* Platform icon - bottom left */}
           {item.platform && (
@@ -190,7 +190,7 @@ const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: Plann
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className="text-sm font-medium text-muted-foreground hover:text-foreground line-clamp-2 block"
+          className="text-base font-semibold text-foreground hover:text-primary line-clamp-2 block"
         >
           {getDisplayText()}
         </a>
