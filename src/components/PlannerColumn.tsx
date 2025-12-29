@@ -13,6 +13,7 @@ interface PlannerItem {
   title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
   priority?: number | null;
+  notes?: string | null;
 }
 
 interface PlannerColumnProps {
@@ -21,9 +22,10 @@ interface PlannerColumnProps {
   items: PlannerItem[];
   onDelete: (id: string) => void;
   onSetPriority: (id: string, priority: number | null) => void;
+  onSetNotes: (id: string, notes: string | null) => void;
 }
 
-const PlannerColumn = ({ id, label, items, onDelete, onSetPriority }: PlannerColumnProps) => {
+const PlannerColumn = ({ id, label, items, onDelete, onSetPriority, onSetNotes }: PlannerColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const stageColors: Record<Stage, string> = {
@@ -50,7 +52,7 @@ const PlannerColumn = ({ id, label, items, onDelete, onSetPriority }: PlannerCol
       </h3>
       <div className="space-y-3">
         {items.map((item) => (
-          <PlannerCard key={item.id} item={item} onDelete={onDelete} onSetPriority={onSetPriority} />
+          <PlannerCard key={item.id} item={item} onDelete={onDelete} onSetPriority={onSetPriority} onSetNotes={onSetNotes} />
         ))}
       </div>
     </div>

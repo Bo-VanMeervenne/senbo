@@ -32,6 +32,7 @@ interface PlannerItem {
   board?: string;
   platform?: "instagram" | "youtube" | "tiktok";
   priority?: number | null;
+  notes?: string | null;
 }
 
 const STAGES: { id: Stage; label: string }[] = [
@@ -197,6 +198,24 @@ const PlannerView = () => {
     }
   };
 
+  const setNotes = async (id: string, notes: string | null) => {
+    // Optimistically update UI
+    const updatedItems = items.map((i) =>
+      i.id === id ? { ...i, notes } : i
+    );
+    setItems(updatedItems);
+
+    const { error } = await supabase
+      .from("planner_items")
+      .update({ notes })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update notes");
+      fetchItems();
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const item = items.find((i) => i.id === event.active.id);
     setActiveItem(item || null);
@@ -332,6 +351,7 @@ const PlannerView = () => {
                 items={getItemsByStage(stage.id)}
                 onDelete={deleteItem}
                 onSetPriority={setPriority}
+                onSetNotes={setNotes}
               />
             ))}
           </div>

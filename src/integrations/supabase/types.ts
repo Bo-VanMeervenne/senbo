@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           link: string
+          notes: string | null
           position: number
           priority: number | null
           stage: string
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           id?: string
           link: string
+          notes?: string | null
           position?: number
           priority?: number | null
           stage?: string
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string
           id?: string
           link?: string
+          notes?: string | null
           position?: number
           priority?: number | null
           stage?: string
