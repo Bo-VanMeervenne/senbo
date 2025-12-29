@@ -1,6 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
-import { X } from "lucide-react";
+import { X, Link } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Stage = "idea" | "tomorrow" | "special";
 
@@ -54,6 +55,28 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
     return item.platform ? item.platform.charAt(0).toUpperCase() + item.platform.slice(1) : "Link";
   };
 
+  // Proxy Instagram thumbnails through edge function
+  const getThumbnailUrl = () => {
+    if (!item.thumbnail) return null;
+    
+    // If it's an Instagram CDN URL, proxy it
+    if (item.thumbnail.includes('cdninstagram.com') || item.thumbnail.includes('fbcdn.net')) {
+      const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ig-thumbnail-proxy?url=${encodeURIComponent(item.thumbnail)}`;
+      return proxyUrl;
+    }
+    
+    return item.thumbnail;
+  };
+
+  const copyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    navigator.clipboard.writeText(item.link);
+    toast.success("Link copied!");
+  };
+
+  const thumbnailUrl = getThumbnailUrl();
+
   return (
     <div
       ref={setNodeRef}
@@ -69,7 +92,7 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
     >
-      {/* Delete button */}
+      {/* Delete button - top left */}
       {isHovered && (
         <button
           onClick={(e) => {
@@ -77,17 +100,28 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
             onDelete(item.id);
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="absolute top-1 right-1 z-10 p-1 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full transition-colors"
+          className="absolute top-1 left-1 z-10 p-1 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full transition-colors"
         >
           <X className="w-3 h-3" />
         </button>
       )}
 
+      {/* Copy link button - top right */}
+      {isHovered && (
+        <button
+          onClick={copyLink}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="absolute top-1 right-1 z-10 p-1 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full transition-colors"
+        >
+          <Link className="w-3 h-3" />
+        </button>
+      )}
+
       {/* Thumbnail */}
-      {item.thumbnail ? (
+      {thumbnailUrl ? (
         <div className="aspect-video w-full">
           <img
-            src={item.thumbnail}
+            src={thumbnailUrl}
             alt="Video thumbnail"
             className="w-full h-full object-cover"
             onError={(e) => {
