@@ -21,35 +21,95 @@ Deno.serve(async (req) => {
     console.log('Fetching thumbnail for:', url);
 
     let thumbnail: string | null = null;
+    let title: string | null = null;
     let platform: string | null = null;
 
     // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       platform = 'youtube';
-      const videoId = extractYouTubeId(url);
-      if (videoId) {
-        thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      try {
+        const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+        const response = await fetch(oembedUrl);
+        if (response.ok) {
+          const data = await response.json();
+          title = data.title || null;
+          thumbnail = data.thumbnail_url || null;
+          console.log('YouTube oEmbed response:', data);
+        }
+      } catch (e) {
+        console.error('YouTube oEmbed error:', e);
+      }
+      // Fallback for thumbnail
+      if (!thumbnail) {
+        const videoId = extractYouTubeId(url);
+        if (videoId) {
+          thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
       }
     }
-    // Instagram
+    // Instagram - use Graph API scraping approach
     else if (url.includes('instagram.com') || url.includes('instagr.am')) {
       platform = 'instagram';
       try {
+        // Try the public oEmbed endpoint first
         const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(url)}`;
+        console.log('Trying Instagram oEmbed:', oembedUrl);
+        
         const response = await fetch(oembedUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
           }
         });
+        
+        console.log('Instagram oEmbed status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('Instagram oEmbed response:', JSON.stringify(data));
           thumbnail = data.thumbnail_url || null;
-          console.log('Instagram oEmbed response:', data);
+          title = data.title || null;
         } else {
-          console.log('Instagram oEmbed failed:', response.status);
+          const errorText = await response.text();
+          console.log('Instagram oEmbed error response:', errorText);
         }
       } catch (e) {
         console.error('Instagram fetch error:', e);
+      }
+      
+      // If oEmbed failed, try fetching the page and extracting og:image
+      if (!thumbnail) {
+        try {
+          console.log('Trying Instagram page scrape for og:image');
+          const pageResponse = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html',
+            }
+          });
+          
+          if (pageResponse.ok) {
+            const html = await pageResponse.text();
+            
+            // Extract og:image
+            const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
+                                html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
+            if (ogImageMatch) {
+              thumbnail = ogImageMatch[1];
+              console.log('Found og:image:', thumbnail);
+            }
+            
+            // Extract og:title
+            const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) ||
+                                html.match(/<meta\s+content="([^"]+)"\s+property="og:title"/i);
+            if (ogTitleMatch && !title) {
+              title = ogTitleMatch[1];
+              console.log('Found og:title:', title);
+            }
+          }
+        } catch (e) {
+          console.error('Instagram page scrape error:', e);
+        }
       }
     }
     // TikTok
@@ -65,6 +125,7 @@ Deno.serve(async (req) => {
         if (response.ok) {
           const data = await response.json();
           thumbnail = data.thumbnail_url || null;
+          title = data.title || null;
           console.log('TikTok oEmbed response:', data);
         } else {
           console.log('TikTok oEmbed failed:', response.status);
@@ -74,10 +135,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Returning thumbnail:', thumbnail, 'platform:', platform);
+    console.log('Returning thumbnail:', thumbnail, 'title:', title, 'platform:', platform);
 
     return new Response(
-      JSON.stringify({ thumbnail, platform }),
+      JSON.stringify({ thumbnail, title, platform }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

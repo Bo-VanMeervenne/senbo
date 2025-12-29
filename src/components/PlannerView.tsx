@@ -27,6 +27,7 @@ interface PlannerItem {
   position: number;
   created_at: string;
   thumbnail?: string | null;
+  title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
 }
 
@@ -80,19 +81,19 @@ const PlannerView = () => {
     setIsLoading(false);
   };
 
-  const fetchThumbnail = async (url: string): Promise<string | null> => {
+  const fetchThumbnail = async (url: string): Promise<{ thumbnail: string | null; title: string | null }> => {
     try {
       const { data, error } = await supabase.functions.invoke('get-video-thumbnail', {
         body: { url }
       });
       if (error) {
         console.error('Thumbnail fetch error:', error);
-        return null;
+        return { thumbnail: null, title: null };
       }
-      return data?.thumbnail || null;
+      return { thumbnail: data?.thumbnail || null, title: data?.title || null };
     } catch (e) {
       console.error('Thumbnail fetch failed:', e);
-      return null;
+      return { thumbnail: null, title: null };
     }
   };
 
@@ -107,8 +108,8 @@ const PlannerView = () => {
 
     setIsAdding(true);
     
-    // Fetch thumbnail first
-    const thumbnail = await fetchThumbnail(newLink.trim());
+    // Fetch thumbnail and title first
+    const { thumbnail, title } = await fetchThumbnail(newLink.trim());
     
     const maxPosition = Math.max(0, ...items.filter(i => i.stage === "idea").map(i => i.position));
 
@@ -118,7 +119,8 @@ const PlannerView = () => {
         link: newLink.trim(), 
         stage: "idea", 
         position: maxPosition + 1,
-        thumbnail 
+        thumbnail,
+        title
       })
       .select()
       .single();
