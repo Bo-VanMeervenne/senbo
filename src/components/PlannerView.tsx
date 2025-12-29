@@ -260,7 +260,7 @@ const PlannerView = () => {
   };
 
   return (
-    <div className="px-4 pb-8">
+    <div className="max-w-5xl mx-auto px-4 pb-8">
       {/* Board tabs */}
       <div className="flex justify-center mb-4">
         <div className="flex items-center p-1 bg-secondary/50 backdrop-blur-xl rounded-full border border-border/30">
