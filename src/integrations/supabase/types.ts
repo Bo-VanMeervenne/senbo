@@ -21,6 +21,7 @@ export type Database = {
           link: string
           position: number
           stage: string
+          thumbnail: string | null
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           link: string
           position?: number
           stage?: string
+          thumbnail?: string | null
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           link?: string
           position?: number
           stage?: string
+          thumbnail?: string | null
         }
         Relationships: []
       }

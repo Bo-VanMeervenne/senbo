@@ -26,7 +26,7 @@ interface PlannerItem {
   stage: Stage;
   position: number;
   created_at: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
 }
 
@@ -40,17 +40,6 @@ const detectPlatform = (url: string): "instagram" | "youtube" | "tiktok" | null 
   if (url.includes("instagram.com") || url.includes("instagr.am")) return "instagram";
   if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
   if (url.includes("tiktok.com") || url.includes("vm.tiktok")) return "tiktok";
-  return null;
-};
-
-const getYouTubeVideoId = (url: string): string | null => {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
   return null;
 };
 
@@ -85,21 +74,26 @@ const PlannerView = () => {
         ...item,
         stage: item.stage as Stage,
         platform: detectPlatform(item.link),
-        thumbnail: getThumbnail(item.link),
       }));
       setItems(enrichedItems);
     }
     setIsLoading(false);
   };
 
-  const getThumbnail = (url: string): string | undefined => {
-    const platform = detectPlatform(url);
-    if (platform === "youtube") {
-      const videoId = getYouTubeVideoId(url);
-      if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const fetchThumbnail = async (url: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-video-thumbnail', {
+        body: { url }
+      });
+      if (error) {
+        console.error('Thumbnail fetch error:', error);
+        return null;
+      }
+      return data?.thumbnail || null;
+    } catch (e) {
+      console.error('Thumbnail fetch failed:', e);
+      return null;
     }
-    // For TikTok and Instagram, we'll use a placeholder or try to fetch later
-    return undefined;
   };
 
   const addItem = async () => {
@@ -112,11 +106,20 @@ const PlannerView = () => {
     }
 
     setIsAdding(true);
+    
+    // Fetch thumbnail first
+    const thumbnail = await fetchThumbnail(newLink.trim());
+    
     const maxPosition = Math.max(0, ...items.filter(i => i.stage === "idea").map(i => i.position));
 
     const { data, error } = await supabase
       .from("planner_items")
-      .insert({ link: newLink.trim(), stage: "idea", position: maxPosition + 1 })
+      .insert({ 
+        link: newLink.trim(), 
+        stage: "idea", 
+        position: maxPosition + 1,
+        thumbnail 
+      })
       .select()
       .single();
 
@@ -128,7 +131,6 @@ const PlannerView = () => {
         ...data,
         stage: data.stage as Stage,
         platform,
-        thumbnail: getThumbnail(newLink),
       };
       setItems([...items, newItem]);
       setNewLink("");
