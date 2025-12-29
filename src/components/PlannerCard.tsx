@@ -1,5 +1,5 @@
 import { useDraggable } from "@dnd-kit/core";
-import { X, Link } from "lucide-react";
+import { X, Link, Star } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import PlatformIcon from "./PlatformIcon";
@@ -15,15 +15,17 @@ interface PlannerItem {
   thumbnail?: string | null;
   title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
+  starred?: boolean;
 }
 
 interface PlannerCardProps {
   item: PlannerItem;
   onDelete: (id: string) => void;
+  onToggleStar?: (id: string) => void;
   isDragging?: boolean;
 }
 
-const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) => {
+const PlannerCard = ({ item, onDelete, onToggleStar, isDragging = false }: PlannerCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: item.id,
@@ -116,9 +118,9 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
         </button>
       )}
 
-      {/* Thumbnail */}
+      {/* Thumbnail - 9:16 aspect ratio for short form content */}
       {thumbnailUrl ? (
-        <div className="aspect-video w-full relative">
+        <div className="aspect-[9/16] w-full relative">
           <img
             src={thumbnailUrl}
             alt="Video thumbnail"
@@ -133,15 +135,49 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
               <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
             </div>
           )}
+          {/* Star button - bottom right */}
+          {onToggleStar && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStar(item.id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className={`absolute bottom-1 right-1 p-1 rounded transition-colors ${
+                item.starred 
+                  ? "bg-yellow-500 text-black" 
+                  : "bg-black/60 text-white/70 hover:text-yellow-400"
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${item.starred ? "fill-current" : ""}`} />
+            </button>
+          )}
         </div>
       ) : (
-        <div className="aspect-video w-full flex items-center justify-center bg-muted/30 relative">
+        <div className="aspect-[9/16] w-full flex items-center justify-center bg-muted/30 relative">
           <span className="text-3xl">{item.platform === "instagram" ? "📸" : item.platform === "youtube" ? "▶️" : item.platform === "tiktok" ? "🎵" : "🔗"}</span>
           {/* Platform icon - bottom left */}
           {item.platform && (
             <div className={`absolute bottom-1 left-1 p-1 bg-black/60 rounded ${platformIconColors[item.platform]}`}>
               <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
             </div>
+          )}
+          {/* Star button - bottom right */}
+          {onToggleStar && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStar(item.id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className={`absolute bottom-1 right-1 p-1 rounded transition-colors ${
+                item.starred 
+                  ? "bg-yellow-500 text-black" 
+                  : "bg-black/60 text-white/70 hover:text-yellow-400"
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${item.starred ? "fill-current" : ""}`} />
+            </button>
           )}
         </div>
       )}
@@ -154,7 +190,7 @@ const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) =
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className="text-xs text-muted-foreground hover:text-foreground line-clamp-2 block"
+          className="text-sm font-medium text-muted-foreground hover:text-foreground line-clamp-2 block"
         >
           {getDisplayText()}
         </a>

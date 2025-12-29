@@ -22,6 +22,7 @@ export type Database = {
           link: string
           position: number
           stage: string
+          starred: boolean
           thumbnail: string | null
           title: string | null
         }
@@ -32,6 +33,7 @@ export type Database = {
           link: string
           position?: number
           stage?: string
+          starred?: boolean
           thumbnail?: string | null
           title?: string | null
         }
@@ -42,6 +44,7 @@ export type Database = {
           link?: string
           position?: number
           stage?: string
+          starred?: boolean
           thumbnail?: string | null
           title?: string | null
         }

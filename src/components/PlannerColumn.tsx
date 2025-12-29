@@ -12,6 +12,7 @@ interface PlannerItem {
   thumbnail?: string | null;
   title?: string | null;
   platform?: "instagram" | "youtube" | "tiktok";
+  starred?: boolean;
 }
 
 interface PlannerColumnProps {
@@ -19,9 +20,10 @@ interface PlannerColumnProps {
   label: string;
   items: PlannerItem[];
   onDelete: (id: string) => void;
+  onToggleStar: (id: string) => void;
 }
 
-const PlannerColumn = ({ id, label, items, onDelete }: PlannerColumnProps) => {
+const PlannerColumn = ({ id, label, items, onDelete, onToggleStar }: PlannerColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const stageColors: Record<Stage, string> = {
@@ -48,7 +50,7 @@ const PlannerColumn = ({ id, label, items, onDelete }: PlannerColumnProps) => {
       </h3>
       <div className="space-y-3">
         {items.map((item) => (
-          <PlannerCard key={item.id} item={item} onDelete={onDelete} />
+          <PlannerCard key={item.id} item={item} onDelete={onDelete} onToggleStar={onToggleStar} />
         ))}
       </div>
     </div>
