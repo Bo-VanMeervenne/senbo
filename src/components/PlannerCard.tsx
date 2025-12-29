@@ -1,0 +1,120 @@
+import { useDraggable } from "@dnd-kit/core";
+import { X } from "lucide-react";
+import { useState } from "react";
+
+type Stage = "idea" | "tomorrow" | "special";
+
+interface PlannerItem {
+  id: string;
+  link: string;
+  stage: Stage;
+  position: number;
+  created_at: string;
+  thumbnail?: string;
+  platform?: "instagram" | "youtube" | "tiktok";
+}
+
+interface PlannerCardProps {
+  item: PlannerItem;
+  onDelete: (id: string) => void;
+  isDragging?: boolean;
+}
+
+const PlannerCard = ({ item, onDelete, isDragging = false }: PlannerCardProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: item.id,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  const platformColors = {
+    instagram: "from-pink-500/20 to-purple-500/20",
+    youtube: "from-red-500/20 to-red-600/20",
+    tiktok: "from-cyan-500/20 to-pink-500/20",
+  };
+
+  const platformIcons = {
+    instagram: "📸",
+    youtube: "▶️",
+    tiktok: "🎵",
+  };
+
+  const getDisplayLink = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.replace("www.", "");
+    } catch {
+      return url.slice(0, 30);
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`relative bg-gradient-to-br ${
+        item.platform ? platformColors[item.platform] : "from-muted/50 to-muted/30"
+      } rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
+        isDragging ? "opacity-90 scale-105 shadow-xl" : "hover:shadow-lg"
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+    >
+      {/* Delete button */}
+      {isHovered && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(item.id);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="absolute top-1 right-1 z-10 p-1 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full transition-colors"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      )}
+
+      {/* Thumbnail */}
+      {item.thumbnail ? (
+        <div className="aspect-video w-full">
+          <img
+            src={item.thumbnail}
+            alt="Video thumbnail"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      ) : (
+        <div className="aspect-video w-full flex items-center justify-center bg-muted/30">
+          <span className="text-3xl">{item.platform ? platformIcons[item.platform] : "🔗"}</span>
+        </div>
+      )}
+
+      {/* Link info */}
+      <div className="p-2">
+        <a
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="text-xs text-muted-foreground hover:text-foreground truncate block"
+        >
+          {getDisplayLink(item.link)}
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export default PlannerCard;
