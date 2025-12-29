@@ -31,10 +31,11 @@ interface PlannerItem {
   title?: string | null;
   board?: string;
   platform?: "instagram" | "youtube" | "tiktok";
+  starred?: boolean;
 }
 
 const STAGES: { id: Stage; label: string }[] = [
-  { id: "idea", label: "Idea" },
+  { id: "idea", label: "Ideas" },
   { id: "tomorrow", label: "Tomorrow" },
   { id: "special", label: "Special" },
 ];
@@ -79,7 +80,14 @@ const PlannerView = () => {
         ...item,
         stage: item.stage as Stage,
         platform: detectPlatform(item.link),
+        starred: item.starred ?? false,
       }));
+      // Sort: starred items first, then by position
+      enrichedItems.sort((a, b) => {
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        return a.position - b.position;
+      });
       setItems(enrichedItems);
     }
     setIsLoading(false);
@@ -154,6 +162,35 @@ const PlannerView = () => {
     }
   };
 
+  const toggleStar = async (id: string) => {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    
+    const newStarred = !item.starred;
+    
+    // Optimistically update UI
+    const updatedItems = items.map((i) =>
+      i.id === id ? { ...i, starred: newStarred } : i
+    );
+    // Re-sort: starred first
+    updatedItems.sort((a, b) => {
+      if (a.starred && !b.starred) return -1;
+      if (!a.starred && b.starred) return 1;
+      return a.position - b.position;
+    });
+    setItems(updatedItems);
+
+    const { error } = await supabase
+      .from("planner_items")
+      .update({ starred: newStarred })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update star");
+      fetchItems();
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const item = items.find((i) => i.id === event.active.id);
     setActiveItem(item || null);
@@ -212,8 +249,15 @@ const PlannerView = () => {
     }
   };
 
-  const getItemsByStage = (stage: Stage) =>
-    items.filter((item) => item.stage === stage);
+  const getItemsByStage = (stage: Stage) => {
+    const stageItems = items.filter((item) => item.stage === stage);
+    // Already sorted globally, but ensure starred first within stage
+    return stageItems.sort((a, b) => {
+      if (a.starred && !b.starred) return -1;
+      if (!a.starred && b.starred) return 1;
+      return a.position - b.position;
+    });
+  };
 
   return (
     <div className="px-4 pb-8">
@@ -278,6 +322,7 @@ const PlannerView = () => {
                 label={stage.label}
                 items={getItemsByStage(stage.id)}
                 onDelete={deleteItem}
+                onToggleStar={toggleStar}
               />
             ))}
           </div>
